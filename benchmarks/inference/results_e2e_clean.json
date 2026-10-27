@@ -1,0 +1,140 @@
+{
+  "summary": {
+    "num_runs": 7,
+    "stage_1_submission_to_backend_receipt_ms": {
+      "min": 0.2,
+      "p50": 0.3,
+      "p90": 0.3,
+      "p95": 0.3,
+      "max": 0.3
+    },
+    "stage_2_backend_receipt_to_inference_start_ms": {
+      "min": 0.4,
+      "p50": 0.5,
+      "p90": 0.66,
+      "p95": 0.78,
+      "max": 0.9
+    },
+    "stage_3_first_reasoning_token_ms": {
+      "min": 403.9,
+      "p50": 499.7,
+      "p90": 576.52,
+      "p95": 587.86,
+      "max": 599.2
+    },
+    "stage_4_first_answer_token_backend_ms": {
+      "min": 10743.2,
+      "p50": 16710.9,
+      "p90": 97596.36,
+      "p95": 125878.08,
+      "max": 154159.8
+    },
+    "stage_5_first_answer_token_ui_rendered_ms": {
+      "min": 10743.4,
+      "p50": 16711.1,
+      "p90": 97596.56,
+      "p95": 125878.28,
+      "max": 154160.0
+    },
+    "stage_5b_backend_to_ui_transit_gap_ms": {
+      "min": 0.1,
+      "p50": 0.2,
+      "p90": 0.2,
+      "p95": 0.2,
+      "max": 0.2
+    },
+    "stage_6_total_completion_s": {
+      "min": 10.8,
+      "p50": 17.46,
+      "p90": 110.76,
+      "p95": 141.54,
+      "max": 172.32
+    }
+  },
+  "runs": [
+    {
+      "iteration": 1,
+      "prompt_type": "short",
+      "prompt_snippet": "What is the capital of France?...",
+      "submission_to_backend_ms": 0.2,
+      "backend_to_inference_start_ms": 0.9,
+      "ttfr_from_submit_ms": 403.9,
+      "backend_ttft_resp_ms": 10743.2,
+      "ui_ttft_actual_ms": 10743.4,
+      "backend_token_to_ui_render_ms": 0.2,
+      "total_completion_s": 10.8
+    },
+    {
+      "iteration": 2,
+      "prompt_type": "short",
+      "prompt_snippet": "What is 15 * 8?...",
+      "submission_to_backend_ms": 0.3,
+      "backend_to_inference_start_ms": 0.5,
+      "ttfr_from_submit_ms": 430.8,
+      "backend_ttft_resp_ms": 11609.0,
+      "ui_ttft_actual_ms": 11609.1,
+      "backend_token_to_ui_render_ms": 0.1,
+      "total_completion_s": 11.77
+    },
+    {
+      "iteration": 3,
+      "prompt_type": "short",
+      "prompt_snippet": "State the boiling point of water...",
+      "submission_to_backend_ms": 0.3,
+      "backend_to_inference_start_ms": 0.5,
+      "ttfr_from_submit_ms": 460.3,
+      "backend_ttft_resp_ms": 17747.7,
+      "ui_ttft_actual_ms": 17747.9,
+      "backend_token_to_ui_render_ms": 0.2,
+      "total_completion_s": 18.75
+    },
+    {
+      "iteration": 4,
+      "prompt_type": "short",
+      "prompt_snippet": "What is the largest planet in our solar system?...",
+      "submission_to_backend_ms": 0.3,
+      "backend_to_inference_start_ms": 0.5,
+      "ttfr_from_submit_ms": 499.7,
+      "backend_ttft_resp_ms": 16710.9,
+      "ui_ttft_actual_ms": 16711.1,
+      "backend_token_to_ui_render_ms": 0.2,
+      "total_completion_s": 17.46
+    },
+    {
+      "iteration": 5,
+      "prompt_type": "short",
+      "prompt_snippet": "Name the primary author of Romeo and Juliet...",
+      "submission_to_backend_ms": 0.2,
+      "backend_to_inference_start_ms": 0.4,
+      "ttfr_from_submit_ms": 551.6,
+      "backend_ttft_resp_ms": 14361.3,
+      "ui_ttft_actual_ms": 14361.4,
+      "backend_token_to_ui_render_ms": 0.1,
+      "total_completion_s": 14.58
+    },
+    {
+      "iteration": 6,
+      "prompt_type": "long",
+      "prompt_snippet": "Compare POSIX 0600 file security with macOS Keychain...",
+      "submission_to_backend_ms": 0.2,
+      "backend_to_inference_start_ms": 0.5,
+      "ttfr_from_submit_ms": 599.2,
+      "backend_ttft_resp_ms": 59887.4,
+      "ui_ttft_actual_ms": 59887.6,
+      "backend_token_to_ui_render_ms": 0.2,
+      "total_completion_s": 69.72
+    },
+    {
+      "iteration": 7,
+      "prompt_type": "long",
+      "prompt_snippet": "Explain how a Reader-Writer lock prevents model unloading...",
+      "submission_to_backend_ms": 0.3,
+      "backend_to_inference_start_ms": 0.5,
+      "ttfr_from_submit_ms": 561.4,
+      "backend_ttft_resp_ms": 154159.8,
+      "ui_ttft_actual_ms": 154160.0,
+      "backend_token_to_ui_render_ms": 0.2,
+      "total_completion_s": 172.32
+    }
+  ]
+}

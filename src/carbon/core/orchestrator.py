@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import time
 import uuid
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
@@ -268,7 +269,11 @@ class CarbonCore:
             await self.cms.acquire_inference_lease(task.task_id)
             try:
                 task.state = TaskState.STREAMING
-                yield {"event": "state_change", "state": task.state.value}
+                yield {
+                    "event": "state_change",
+                    "state": task.state.value,
+                    "t_inference_start": time.time(),
+                }
 
                 # Construct system prompt with reasoning directives
                 system_prompt = (
@@ -292,12 +297,20 @@ class CarbonCore:
 
                     thinking_part = chunk.get("thinking", "")
                     if thinking_part:
-                        yield {"event": "thinking", "text": thinking_part}
+                        yield {
+                            "event": "thinking",
+                            "text": thinking_part,
+                            "t_reasoning": time.time(),
+                        }
 
                     resp_part = chunk.get("response", "")
                     if resp_part:
                         accumulated_tokens.append(resp_part)
-                        yield {"event": "token", "text": resp_part}
+                        yield {
+                            "event": "token",
+                            "text": resp_part,
+                            "t_token": time.time(),
+                        }
 
                 full_response = "".join(accumulated_tokens)
                 task.result = full_response

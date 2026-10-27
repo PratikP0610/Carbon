@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import secrets
+import time
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -366,6 +367,7 @@ def create_app() -> FastAPI:
                     continue
 
                 if action == "submit":
+                    t_backend_receipt = time.time()
                     prompt = payload.get("prompt", "").strip()
                     if not prompt:
                         await websocket.send_json(
@@ -385,6 +387,7 @@ def create_app() -> FastAPI:
                             "event": "task_created",
                             "task_id": task.task_id,
                             "conversation_id": task.conversation_id,
+                            "t_backend_receipt": t_backend_receipt,
                         }
                     )
 

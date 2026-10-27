@@ -181,37 +181,50 @@ public struct MessageBubbleView: View {
                     .font(.system(size: 16, weight: .bold))
                     .padding(.top, 2)
 
-                VStack(alignment: .leading, spacing: 6) {
-                    if let thinking = message.thinking, !thinking.isEmpty {
-                        DisclosureGroup {
-                            Text(thinking)
-                                .font(.system(size: 12, design: .monospaced))
-                                .foregroundColor(.secondary)
-                                .padding(.top, 4)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "brain")
-                                    .foregroundColor(.purple)
-                                    .font(.system(size: 11))
-                                Text("Thinking Process")
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundColor(.purple)
-                            }
+                VStack(alignment: .leading, spacing: 8) {
+                    // 1. Error state
+                    if let err = message.errorMessage {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.red)
+                            Text("Error: \(err)")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.red)
                         }
                         .padding(8)
-                        .background(Color.purple.opacity(0.08))
+                        .background(Color.red.opacity(0.1))
                         .cornerRadius(8)
                     }
 
-                    if message.text.isEmpty && message.isStreaming {
-                        ProgressView()
-                            .scaleEffect(0.7)
-                            .padding(.vertical, 6)
-                    } else {
+                    // 2. Processing / Progress indicator (Direct instruction: no raw reasoning display)
+                    if message.text.isEmpty && (message.isProcessing || message.isStreaming) && message.errorMessage == nil && !message.isCancelled {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                            Text("Processing...")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 4)
+                    }
+
+                    // 3. Incremental user-visible answer text
+                    if !message.text.isEmpty {
                         Text(message.text)
                             .font(.system(size: 14))
                             .textSelection(.enabled)
+                    }
+
+                    // 4. Cancellation state
+                    if message.isCancelled {
+                        HStack(spacing: 4) {
+                            Image(systemName: "stop.circle")
+                                .font(.system(size: 11))
+                            Text("Cancelled by user")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .foregroundColor(.secondary)
+                        .padding(.top, 2)
                     }
                 }
                 .padding(.horizontal, 14)
