@@ -12,38 +12,50 @@ Performance is a first-class product requirement for Carbon 1.0.0. The goal of t
 
 ---
 
-## 2. Key Metrics & Engineering Targets
+## 2. Key Metrics & Statistical Distributions
 
-| Metric | Measurement Scope | Initial Engineering Target |
-|---|---|---|
-| **Simple Request TTFT** | Time-To-First-Token on warm simple conversational request (`"Hi"`, `"Status"`) | **P95 ≤ 2.0 seconds** |
-| **Standard Request TTFT** | Time-To-First-Token on standard explanation / synthesis prompt (approx. 50 tokens input) | **P95 ≤ 4.0 seconds** |
-| **Cached Memory Retrieval** | SQLite indexed key retrieval and FTS query from warm cache | **P95 ≤ 100 ms** |
-| **Core Orchestration Overhead** | Total latency introduced by Carbon Core (intent, routing, governance, tool parsing) excluding LLM inference | **P95 ≤ 50 ms** |
-| **Model Switching Time** | Time required to unload model A, free memory buffers, and pre-warm model B | Tracked baseline (target ≤ 6.0s cold) |
-| **Process Memory Footprint** | Resident Set Size (RSS) of Python backend process | **RSS ≤ 250 MB** |
-| **Unified Memory Headroom** | Available macOS unified memory during active 9B model inference | **Free/Inactive Memory ≥ 4.0 GB** |
-| **Stability Under Load** | Continuous operation without memory leak or crash | **60 minutes continuous test** |
+In accordance with Phase 0 revisions, all benchmark observations must be derived from repeated runs (N ≥ 5 for inference, N ≥ 50 for micro-benchmarks) and reported as a statistical distribution:
+- **Minimum (Min)**
+- **Median (P50)**
+- **95th Percentile (P95)**
+- **Maximum (Max)**
 
----
-
-## 3. Benchmark Harness Design
-
-Benchmarks are implemented as reproducible Python scripts under `benchmarks/`:
-
-1. `benchmarks/inference/`: Measures cold-load duration, warm TTFT, tokens-per-second generation rate, and prompt evaluation latency.
-2. `benchmarks/orchestration/`: Measures microsecond overhead of Core task scheduling, intent classification heuristics, and governance checks.
-3. `benchmarks/memory/`: Measures SQLite read/write latency under synthetic scale (1,000 to 10,000 records) and FTS search response times.
-4. `benchmarks/voice/`: Measures audio chunk processing, STT transcription latency, and TTS audio synthesis lead time.
+| Metric | Measurement Scope | PRD Target | Statistical Reporting |
+|---|---|---|---|
+| **Cold Model Load Time** | Disk APFS → Metal Unified Memory allocation | Baseline tracked | Single cold observation post `keep_alive: 0` |
+| **Simple Request TTFT** | Time-To-First-Token on warm simple prompt (e.g., status, basic math) | **P95 ≤ 2.0s** | Min, Median, P95, Max |
+| **Standard Request TTFT** | Time-To-First-Token on 50-token input prompt | **P95 ≤ 4.0s** | Min, Median, P95, Max |
+| **Generation Throughput** | Output tokens generated per second (`eval_count / eval_duration`) | ≥ 15 tok/s | Min, Median, P95, Max |
+| **Total Turnaround Latency**| Total request execution time from dispatch to final token | Task-dependent | Min, Median, P95, Max |
+| **Model Switching Time** | Explicit unload of active model + load of target model | ≤ 6.0s cold | Repeated switch iterations |
+| **Core Orchestration Overhead**| Core pipeline delay (intent, governance, validation) excluding LLM | **P95 ≤ 50ms** | Min, Median, P95, Max |
+| **Host Memory Pressure** | Mach kernel pressure level during peak inference | Level 1 (Normal) | Sampled before, during, and after inference |
 
 ---
 
-## 4. Execution Protocol
+## 3. Real-World Testing Conditions
 
-1. Close non-essential background applications to prevent CPU/memory contention.
-2. Verify Ollama is running and `qwen3.5:9b` is present.
-3. Run the automated benchmark harness:
-   ```bash
-   ./scripts/benchmark.sh
-   ```
-4. Output results in structured JSON and markdown reports for comparison against previous commits.
+To ensure benchmarks reflect actual user environments rather than synthetic isolation, tests must be conducted under **Normal macOS Operational Workloads**:
+1. **Background User Applications Active:** macOS desktop session running standard developer applications (browser with multiple active tabs, terminal windows, code editor, background sync daemons).
+2. **Unified Memory Baseline:** Document initial memory state (`vm_stat`, `sysctl kern.memorystatus_vm_pressure_level`, swap allocation).
+3. **Thermal State:** Monitor thermal throttling indicators (`pmset -g therm`) to verify Apple Silicon is operating without passive thermal throttling penalties.
+4. **Distinguish Metrics:**
+   - *Disk Footprint:* APFS file size on disk.
+   - *Resident VRAM Allocation:* Physical Metal GPU buffer allocation.
+   - *Host Memory Pressure:* Mach virtual memory pressure level (Normal = 1, Warning = 2, Critical = 4).
+
+---
+
+## 4. Benchmark Harness Design & Execution Protocol
+
+Benchmarks are organized into reproducible scripts under `benchmarks/`:
+1. `benchmarks/inference/statistical_benchmark.py`: Measures cold load, warm TTFT, generation speed, total turnaround latency, and computes statistical distributions.
+2. `benchmarks/orchestration/`: Measures microsecond overhead of Core task scheduling and governance checks.
+3. `benchmarks/memory/`: Measures SQLite read/write latency under scale and FTS5 search times.
+4. `benchmarks/voice/`: Measures audio chunk processing and speech pipeline latency.
+
+Execution command:
+```bash
+.venv/bin/python benchmarks/inference/statistical_benchmark.py
+```
+

@@ -43,19 +43,34 @@ stateDiagram-v2
 
 ### 2.2 Carbon Model Supervisor (CMS)
 
-CMS is the sole authority governing model selection, verification, and lifecycle.
+CMS is the sole authority governing model selection, verification, inference leases, and lifecycle transitions.
 
-- **Model Registry:**
-  - Maintains metadata on verified local and remote models (Family, parameters, quantization, context length, capabilities, resource requirements).
-  - Actively polls provider health via automated probes.
-- **Single-Model Concurrency Gate:**
-  - Utilizes an asynchronous mutual exclusion lock (`asyncio.Lock`) preventing concurrent chat LLM inferences.
-  - Protects the 16 GB Apple Silicon unified memory pool from memory pressure events and thermal throttling.
-- **Switching Engine:**
-  - If a task demands capabilities beyond the currently loaded model (e.g. specialized coding, vision, or larger context), CMS orchestrates an explicit switch.
-  - Unloads the active model via provider hooks (`keep_alive: 0` in Ollama).
-  - Verifies host memory headroom before issuing warm-up load commands for the target model.
-  - Fallback logic: If the target model fails to respond within a timeout threshold, CMS gracefully rolls back to the approved default (`qwen3.5:9b`).
+- **Exclusive Inference Lease Mechanism:**
+  - All chat model access requires acquiring a tokenized `InferenceLease` bounded by a strict timeout (default 60s).
+  - Leases are managed via async context managers (`async with cms.lease(task_id): ...`), guaranteeing release on cancellation or exception.
+- **Fair Reader-Writer Concurrency Gate (RWLock):**
+  - **Inference (Shared Reader):** Grants leases to tasks targeting the resident active model. The single-active-chat-LLM invariant enforces `max_concurrent_chat_leases = 1`.
+  - **Switching (Exclusive Writer):** Initiated when a task requires capabilities absent in the active model. Immediately sets `switch_pending = True`, blocking new inference leases, and awaits full drain (`active_leases == 0`) before safely commanding model unload.
+  - Guarantees model switching **can never unload a model during active inference**.
+- **Request Queuing, Cancellation, and Checkpointing:**
+  - Queuing via `asyncio.PriorityQueue` (Priority 0: interactive/cancellation, Priority 1: standard tasks, Priority 2: background tasks).
+  - Rapid cancellation via per-task cancellation tokens (`asyncio.Event`), instantly severing HTTP streaming sockets and releasing leases.
+  - Task checkpointing in SQLite (`tasks` table) before tool dispatches to allow safe resumption or rollback.
+- **Switching & Failure Recovery Protocol:**
+  - Unloads active weights via Ollama `keep_alive: 0` and verifies Metal buffer deallocation.
+  - Pre-warms target model with health checks.
+  - **Failed Unload Recovery:** Retries up to 3 times; if unloading fails, CMS **aborts the switch** to prevent running two models concurrently and crashing host unified memory.
+  - **Failed Load Recovery:** If the target model fails to load within 15s, CMS automatically rolls back to the primary approved model (`qwen3.5:9b`).
+- **Dynamic Unified Memory Management:**
+  - Discards static fixed memory budgets in favor of real-time Mach kernel pressure monitoring (`kern.memorystatus_vm_pressure_level`).
+  - Distinguishes **Disk Footprint** (6.55 GB APFS file), **Resident VRAM** (~6.10 GB Metal allocation), and **Host Memory Pressure** (Normal=1, Warning=2, Critical=4).
+  - **Pressure Reaction Ladder:**
+    - *Level 1 (Normal):* Model kept warm (`keep_alive: 5m`), full context window (up to 32K tokens).
+    - *Level 2 (Warning):* Unload idle specialist models, cap context window to 8,192 tokens, enforce `keep_alive: 0` for non-interactive tasks.
+    - *Level 4 (Critical):* Unload chat model immediately post-inference, disallow deep reasoning, notify UI.
+- **Specialist Workload Isolation:**
+  - Speech-to-Text (STT), Text-to-Speech (TTS), and Embedding engines have separate interfaces and strict independent memory budgets (≤ 500 MB).
+  - Specialist workloads run on Apple Neural Engine (ANE) or CPU cores to avoid Metal GPU buffer contention with the primary Chat LLM.
 
 ---
 

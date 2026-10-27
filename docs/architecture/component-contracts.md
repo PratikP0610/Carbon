@@ -1,40 +1,36 @@
-# Carbon Component Contracts & Interfaces
+# Carbon Component Contracts & Subsystem Interfaces
 
-This document formalizes the abstract interfaces, method signatures, and data contracts connecting Carbon's subsystems. All implementations must strictly conform to these contracts.
+This document formalizes the abstract interfaces, method signatures, data models, and specialist model contracts connecting Carbon's subsystems.
 
 ---
 
-## 1. Core Models & Enumerations
+## 1. Core Enumerations & Data Contracts
 
 ```python
-from enum import Enum, auto
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any, Protocol, runtime_checkable
 from pydantic import BaseModel, Field
-from datetime import datetime
 
+class ReasoningDepth(StrEnum):
+    INSTANT = "instant"      # Direct conversational/factual tasks (< 500ms TTFT target)
+    STANDARD = "standard"    # Balanced explanations, comparisons, ordinary planning
+    DEEP = "deep"            # Complex analysis, multi-step problem solving, explicit thinking
 
-class ReasoningDepth(str, Enum):
-    INSTANT = "instant"  # Direct low-latency answers, no thinking phase
-    STANDARD = "standard"  # Balanced reasoning, single-stage decomposition
-    DEEP = "deep"  # Full chain-of-thought, multi-step validation
+class PermissionLevel(StrEnum):
+    P0 = "P0"  # Conversational / informational (read-only, no side effects)
+    P1 = "P1"  # Read approved system state (metrics, window titles, hardware status)
+    P2 = "P2"  # Reversible actions (app launching with whitelist, clipboard)
+    P3 = "P3"  # Consequential modifications (file write, calendar, network) - User Approval
+    P4 = "P4"  # Sensitive / destructive operations (file deletion, credentials) - Double Confirmation
 
-
-class PermissionLevel(str, Enum):
-    P0 = "P0"  # Conversational / informational
-    P1 = "P1"  # Read approved system state
-    P2 = "P2"  # Reversible actions (app launch, window focus)
-    P3 = "P3"  # Consequential modifications (file write, outbound network)
-    P4 = "P4"  # Sensitive / destructive operations (delete, credential access)
-
-
-class AutonomyLevel(str, Enum):
+class AutonomyLevel(StrEnum):
     A0 = "A0"  # Observe only
-    A1 = "A1"  # Assist and recommend (user approves all actions)
-    A2 = "A2"  # Auto-execute P0-P2; prompt for P3+
-    A3 = "A3"  # Bounded autonomy within predefined guardrails
+    A1 = "A1"  # Assist and recommend (default)
+    A2 = "A2"  # Execute approved actions (auto P0-P2)
+    A3 = "A3"  # Bounded autonomy within explicitly defined policy envelopes
 
-
-class TaskState(str, Enum):
+class TaskState(StrEnum):
     PENDING = "pending"
     ANALYZING = "analyzing"
     AWAITING_APPROVAL = "awaiting_approval"
@@ -43,195 +39,155 @@ class TaskState(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
+class ModelWorkloadType(StrEnum):
+    CHAT_LLM = "chat_llm"
+    SPEECH_TO_TEXT = "speech_to_text"
+    TEXT_TO_SPEECH = "text_to_speech"
+    EMBEDDING = "embedding"
+    VISION = "vision"
 ```
 
 ---
 
-## 2. Model Supervisor Contracts (`CMS`)
+## 2. Model Control & Specialist Workload Contracts
+
+Specialist workloads (STT, TTS, Embeddings) are explicitly decoupled from the primary Chat LLM.
 
 ```python
-class ModelCapability(str, Enum):
-    COMPLETION = "completion"
-    CHAT = "chat"
-    TOOLS = "tools"
-    THINKING = "thinking"
-    VISION = "vision"
-    EMBEDDING = "embedding"
-
-
 class ModelMetadata(BaseModel):
-    id: str  # e.g. "qwen3.5:9b"
-    name: str  # Display name
-    provider: str  # e.g. "ollama"
-    family: str  # e.g. "qwen35"
-    parameter_size: str  # e.g. "9.0B"
-    quantization: str  # e.g. "Q4_K_M"
-    context_length: int  # e.g. 262144
-    memory_footprint_mb: int  # e.g. 6200
-    capabilities: List[ModelCapability]
+    id: str
+    name: str
+    workload_type: ModelWorkloadType
+    provider: str
+    family: str
+    parameter_size: str
+    quantization: str
+    context_length: int
+    memory_footprint_mb: int
     is_active: bool = False
     is_healthy: bool = True
 
+@runtime_checkable
+class IChatModelProvider(Protocol):
+    """Contract for Chat LLMs governed by Single Active Chat LLM Concurrency."""
+    async def is_healthy(self) -> bool: ...
+    async def generate_stream_events(self, model_id: str, prompt: str, system: str | None = None): ...
+    async def chat_stream(self, model_id: str, messages: list[Any], tools: list[dict[str, Any]] | None = None): ...
+    async def load_model(self, model_id: str) -> bool: ...
+    async def unload_model(self, model_id: str) -> bool: ...
 
+@runtime_checkable
+class ISpeechToTextEngine(Protocol):
+    """Contract for local audio transcription (e.g. Whisper.cpp via CoreML/ANE)."""
+    @property
+    def max_memory_budget_mb(self) -> int: return 500
+    async def transcribe_chunk(self, pcm_bytes: bytes, sample_rate: int = 16000) -> str: ...
+    async def reset(self) -> None: ...
+
+@runtime_checkable
+class ITextToSpeechEngine(Protocol):
+    """Contract for local speech synthesis (e.g. Kokoro ONNX/native)."""
+    @property
+    def max_memory_budget_mb(self) -> int: return 500
+    async def synthesize_stream(self, text: str) -> AsyncGenerator[bytes, None]: ...
+    async def interrupt(self) -> None: ...
+
+@runtime_checkable
+class IEmbeddingEngine(Protocol):
+    """Contract for local dense vector embeddings."""
+    @property
+    def max_memory_budget_mb(self) -> int: return 400
+    async def embed_text(self, text: str) -> list[float]: ...
+    async def embed_batch(self, texts: list[str]) -> list[list[float]]: ...
+
+@runtime_checkable
+class IVisionEngine(Protocol):
+    """Contract for visual processing / screen inspection."""
+    async def analyze_frame(self, image_bytes: bytes, prompt: str) -> str: ...
+```
+
+---
+
+## 3. Carbon Model Supervisor (CMS) Contract
+
+```python
 class ModelSwitchRequest(BaseModel):
     target_model_id: str
     reason: str
     force: bool = False
 
-
-class IModelProvider(Protocol):
-    """Protocol for low-level inference runtimes (Ollama, etc.)."""
-
-    async def list_available_models(self) -> List[ModelMetadata]: ...
-    async def is_healthy(self) -> bool: ...
-    async def generate_stream(self, model_id: str, prompt: str, system: Optional[str] = None): ...
-    async def chat_stream(
-        self,
-        model_id: str,
-        messages: List[Dict[str, Any]],
-        tools: Optional[List[Dict[str, Any]]] = None,
-    ): ...
-    async def load_model(self, model_id: str) -> bool: ...
-    async def unload_model(self, model_id: str) -> bool: ...
-
-
+@runtime_checkable
 class ICarbonModelSupervisor(Protocol):
-    """Sole authority controlling model selection, concurrency, and switching."""
-
-    async def get_active_model(self) -> Optional[ModelMetadata]: ...
-    async def list_registered_models(self) -> List[ModelMetadata]: ...
-    async def select_model_for_task(
-        self, capabilities_required: List[ModelCapability], reasoning: ReasoningDepth
-    ) -> ModelMetadata: ...
+    """Sole authority for model registration, selection, switching, and concurrency control."""
+    async def initialize(self) -> None: ...
+    async def get_active_model(self) -> ModelMetadata | None: ...
+    async def list_registered_models(self) -> list[ModelMetadata]: ...
+    async def select_model_for_task(self, capabilities: list[str], reasoning: ReasoningDepth) -> ModelMetadata: ...
     async def switch_model(self, request: ModelSwitchRequest) -> bool: ...
-    async def acquire_inference_lease(self, model_id: str): ...
-    async def release_inference_lease(self, model_id: str): ...
+    async def acquire_inference_lease(self, model_id: str) -> None: ...
+    async def release_inference_lease(self, model_id: str) -> None: ...
 ```
 
 ---
 
-## 3. Intelligence Engine Contracts
+## 4. Intelligence & Governance Contracts
 
 ```python
 class TaskIntent(BaseModel):
     category: str
-    confidence: float
+    confidence: float = Field(ge=0.0, le=1.0)
     reasoning_depth: ReasoningDepth
-    required_capabilities: List[ModelCapability]
+    required_capabilities: list[str]
     summary: str
 
-
-class PlanStep(BaseModel):
-    step_id: int
-    tool_name: str
-    arguments: Dict[str, Any]
-    permission_level: PermissionLevel
-    description: str
-
-
-class ExecutionPlan(BaseModel):
-    intent: TaskIntent
-    steps: List[PlanStep]
-    estimated_duration_seconds: float
-
-
+@runtime_checkable
 class IIntelligenceEngine(Protocol):
-    async def classify_intent(
-        self, user_prompt: str, context: Optional[Dict[str, Any]] = None
-    ) -> TaskIntent: ...
-    async def create_plan(
-        self, prompt: str, intent: TaskIntent, available_tools: List[str]
-    ) -> ExecutionPlan: ...
-    async def validate_output(
-        self, raw_output: str, expected_schema: Dict[str, Any]
-    ) -> Dict[str, Any]: ...
-```
+    async def classify_intent(self, user_prompt: str, context: dict[str, Any] | None = None) -> TaskIntent: ...
+    async def validate_output(self, raw_output: str, expected_schema: dict[str, Any]) -> dict[str, Any]: ...
 
----
-
-## 4. Persistent Memory Engine Contracts
-
-```python
-class MemoryType(str, Enum):
-    WORKING = "working"
-    EPISODIC = "episodic"
-    SEMANTIC = "semantic"
-    PROCEDURAL = "procedural"
-
-
-class MemoryRecord(BaseModel):
-    id: str
-    memory_type: MemoryType
-    key: str
-    content: str
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-    source: str
-    confidence: float = 1.0
-    created_at: datetime
-    updated_at: datetime
-    expires_at: Optional[datetime] = None
-
-
-class IMemoryEngine(Protocol):
+@runtime_checkable
+class IGovernanceEngine(Protocol):
     async def initialize(self) -> None: ...
-    async def store(self, record: MemoryRecord) -> str: ...
-    async def retrieve(
-        self, key: str, memory_type: Optional[MemoryType] = None
-    ) -> Optional[MemoryRecord]: ...
-    async def search(
-        self, query: str, memory_type: Optional[MemoryType] = None, limit: int = 10
-    ) -> List[MemoryRecord]: ...
-    async def update(
-        self, record_id: str, content: str, metadata: Optional[Dict[str, Any]] = None
-    ) -> bool: ...
-    async def forget(self, record_id: str) -> bool: ...
-    async def forget_by_query(self, query: str) -> int: ...
+    async def authorize_action(self, tool_id: str, permission: PermissionLevel, args: dict[str, Any], autonomy: AutonomyLevel) -> bool: ...
+    async def record_audit_entry(self, event_type: str, details: dict[str, Any], level: str = "INFO") -> None: ...
 ```
 
 ---
 
-## 5. Governance & Tool Contracts
+## 5. Tool & Memory Contracts
 
 ```python
-class ToolParameterSchema(BaseModel):
-    name: str
-    type: str
-    description: str
-    required: bool = True
-    default: Optional[Any] = None
-
-
 class ToolDefinition(BaseModel):
     id: str
     name: str
     description: str
     permission_level: PermissionLevel
-    parameters_schema: Dict[str, Any]
+    parameters_schema: dict[str, Any]
     is_reversible: bool
     timeout_seconds: float = 10.0
-
 
 class ToolExecutionResult(BaseModel):
     tool_id: str
     success: bool
-    data: Optional[Any] = None
-    error: Optional[str] = None
-    duration_ms: float
+    data: Any | None = None
+    error: str | None = None
+    duration_ms: float = 0.0
 
-
-class BaseTool(Protocol):
+@runtime_checkable
+class ITool(Protocol):
     @property
     def definition(self) -> ToolDefinition: ...
-    async def execute(self, arguments: Dict[str, Any]) -> ToolExecutionResult: ...
+    async def execute(self, arguments: dict[str, Any]) -> ToolExecutionResult: ...
 
-
-class IGovernanceEngine(Protocol):
-    async def authorize_action(
-        self,
-        tool_id: str,
-        permission_level: PermissionLevel,
-        arguments: Dict[str, Any],
-        autonomy_level: AutonomyLevel,
-    ) -> bool: ...
-    async def record_audit_entry(self, event_type: str, details: Dict[str, Any]) -> None: ...
+@runtime_checkable
+class IMemoryEngine(Protocol):
+    async def initialize(self) -> None: ...
+    async def close(self) -> None: ...
+    async def store(self, record: Any) -> str: ...
+    async def retrieve(self, key: str, memory_type: str | None = None) -> Any | None: ...
+    async def search(self, query: str, memory_type: str | None = None, limit: int = 10) -> list[Any]: ...
+    async def update(self, record_id: str, content: str, metadata: dict[str, Any] | None = None) -> bool: ...
+    async def forget(self, record_id: str) -> bool: ...
+    async def forget_by_query(self, query: str) -> int: ...
 ```
