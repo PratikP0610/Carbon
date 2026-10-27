@@ -50,12 +50,8 @@ xcuserdata/
 DerivedData/
 
 # Local databases and runtime state
-data/*.db
-data/*.sqlite
-data/*.sqlite3
-data/*.wal
-data/*.shm
-data/logs/
+data/*
+!data/.gitkeep
 *.log
 
 # Environment variables & secrets
