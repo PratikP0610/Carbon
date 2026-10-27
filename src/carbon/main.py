@@ -20,6 +20,7 @@ from fastapi import (
     status,
 )
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from carbon.config.settings import Settings, get_settings
@@ -112,26 +113,41 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # CORS restricted to loopback
+    # Strict CORS configuration: Loopback only, no wildcards, no arbitrary null origins
+    ALLOWED_ORIGINS = {
+        "http://127.0.0.1:8765",
+        "http://localhost:8765",
+    }
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=list(ALLOWED_ORIGINS),
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "Accept"],
     )
 
-    # Middleware: Loopback enforcement (Non-Negotiable Rule 6)
+    # Middleware: Loopback and Origin enforcement
     @app.middleware("http")
     async def loopback_security_middleware(request: Request, call_next):
         client_host = request.client.host if request.client else "unknown"
         allowed_hosts = {"127.0.0.1", "localhost", "::1", "testclient"}
         if client_host not in allowed_hosts:
             logger.error(f"Rejected non-loopback connection attempt from {client_host}")
-            raise HTTPException(
+            return JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied: Carbon API is restricted strictly to local loopback.",
+                content={
+                    "detail": "Access denied: Carbon API is restricted strictly to local loopback."
+                },
             )
+
+        origin = request.headers.get("origin")
+        if origin and origin not in ALLOWED_ORIGINS:
+            logger.warning(f"Rejected request with unauthorized origin: '{origin}'")
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={"detail": "Access denied: Origin not allowed by CORS policy."},
+            )
+
         return await call_next(request)
 
     async def verify_local_auth(
@@ -164,6 +180,27 @@ def create_app() -> FastAPI:
     async def get_health():
         c = await get_core()
         return await c.get_system_health()
+
+    @app.post("/api/v1/auth/rotate-token", dependencies=[Depends(verify_local_auth)])
+    async def rotate_token():
+        """Rotate the local authorization token, persisting it to disk with 0600 permissions."""
+        settings = get_settings()
+        new_token = secrets.token_urlsafe(32)
+        token_path = settings.data_dir / ".carbon_token"
+        try:
+            settings.data_dir.mkdir(parents=True, exist_ok=True)
+            with open(token_path, "w", encoding="utf-8") as f:
+                f.write(new_token)
+            os.chmod(token_path, 0o600)
+        except Exception as e:
+            logger.error(f"Failed to persist rotated token: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to persist rotated token.",
+            ) from e
+        app.state.api_token = new_token
+        logger.info("Local authorization token rotated successfully.")
+        return {"status": "rotated", "message": "Token rotated successfully."}
 
     @app.get("/api/v1/models", dependencies=[Depends(verify_local_auth)])
     async def list_models() -> dict[str, Any]:
@@ -237,10 +274,61 @@ def create_app() -> FastAPI:
     # --- WebSocket Streaming Endpoint ---
 
     @app.websocket("/ws/chat")
-    async def websocket_chat_endpoint(websocket: WebSocket):
+    async def websocket_chat_endpoint(websocket: WebSocket, token: str | None = None):
         c = await get_core()
+
+        # Origin Validation for WebSocket
+        origin = websocket.headers.get("origin")
+        if origin and origin not in ALLOWED_ORIGINS:
+            logger.warning(f"Rejected WebSocket connection with unauthorized origin: '{origin}'")
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return
+
+        expected_token = getattr(app.state, "api_token", None)
+        authenticated = False
+        if not expected_token:
+            authenticated = True
+        else:
+            # 1. Check Authorization header
+            auth_header = websocket.headers.get("authorization")
+            if auth_header and auth_header.startswith("Bearer "):
+                if auth_header[7:].strip() == expected_token:
+                    authenticated = True
+            # 2. Check query parameter token
+            if not authenticated and token and token == expected_token:
+                authenticated = True
+
         await websocket.accept()
-        logger.info("WebSocket client connected to /ws/chat")
+
+        # 3. If not yet authenticated, require auth frame within 5 seconds
+        if not authenticated and expected_token:
+            try:
+                auth_data = await asyncio.wait_for(websocket.receive_text(), timeout=5.0)
+                auth_payload = json.loads(auth_data)
+                if (
+                    auth_payload.get("action") == "auth"
+                    and auth_payload.get("token") == expected_token
+                ):
+                    authenticated = True
+                    await websocket.send_json({"event": "authenticated"})
+                else:
+                    logger.warning(
+                        "WebSocket handshake authentication failed: invalid token frame."
+                    )
+                    await websocket.send_json(
+                        {"event": "error", "message": "Authentication failed."}
+                    )
+                    await websocket.close(code=4401)
+                    return
+            except Exception as e:
+                logger.warning(f"WebSocket handshake failed without authentication: {e}")
+                try:
+                    await websocket.close(code=4401)
+                except Exception:
+                    pass
+                return
+
+        logger.info("WebSocket client connected and authenticated to /ws/chat")
 
         try:
             while True:

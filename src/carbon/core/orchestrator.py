@@ -265,7 +265,7 @@ class CarbonCore:
 
             # 4. Acquire single-model concurrency lease (ADR-0003)
             yield {"event": "acquiring_model_lease", "model": model.id}
-            await self.cms.acquire_inference_lease(model.id)
+            await self.cms.acquire_inference_lease(task.task_id)
             try:
                 task.state = TaskState.STREAMING
                 yield {"event": "state_change", "state": task.state.value}
@@ -317,7 +317,7 @@ class CarbonCore:
 
                 yield {"event": "completed", "task": task.to_dict()}
             finally:
-                await self.cms.release_inference_lease(model.id)
+                await self.cms.release_inference_lease(task.task_id)
 
         except Exception as e:
             logger.error(f"Error during task '{task.task_id}' execution: {e}", exc_info=True)
