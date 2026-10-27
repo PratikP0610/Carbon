@@ -209,3 +209,31 @@ async def test_recovery_after_failed_model_loading(cms_env):
     active = await supervisor.get_active_model()
     assert active.id == "qwen3.5:9b"
     assert active.is_active is True
+
+
+@pytest.mark.asyncio
+async def test_active_inference_protection_under_critical_pressure(cms_env):
+    """Verify Level 4 memory pressure does NOT evict model while an active inference lease is held, but evicts upon lease release."""
+    supervisor, provider = cms_env
+
+    # 1. Acquire inference lease for ongoing generation
+    await supervisor.acquire_inference_lease("active-task-1")
+    assert "active-task-1" in supervisor._active_leases
+
+    # 2. Trigger Level 4 memory pressure while inference is running
+    res = await supervisor.handle_memory_pressure(4)
+    assert res["level"] == 4
+    assert supervisor._deferred_critical_unload is True
+
+    # 3. Model must NOT have been unloaded yet! Active inference is protected.
+    assert "qwen3.5:9b" not in provider.unloaded_models
+    active = await supervisor.get_active_model()
+    assert active.is_active is True
+
+    # 4. Release inference lease
+    await supervisor.release_inference_lease("active-task-1")
+
+    # 5. Deferred eviction executes immediately upon lease release
+    assert "qwen3.5:9b" in provider.unloaded_models
+    assert supervisor._deferred_critical_unload is False
+    assert active.is_active is False

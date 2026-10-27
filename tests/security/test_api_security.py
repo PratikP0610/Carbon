@@ -117,6 +117,38 @@ def test_token_rotation_and_file_permissions(test_app):
     assert file_mode == "0o600"
 
 
+def test_websocket_query_string_token_rejected(test_app):
+    """Verify that passing tokens in the query string is rejected and does not authenticate."""
+    app, _ = test_app
+    client = TestClient(app)
+
+    # Attempting to connect with query parameter token
+    # Since query parameter auth was removed, the socket accepts only if followed by auth frame or header.
+    # If the client immediately sends a submit action thinking it is authenticated, it fails!
+    with client.websocket_connect("/ws/chat?token=test-secret-token-12345") as ws:
+        # Prompt command sent without explicit in-socket auth frame
+        ws.send_json({"action": "submit", "prompt": "Hello"})
+        msg = ws.receive_json()
+        # Must fail because query-string authentication is eliminated
+        assert msg.get("event") == "error"
+        assert "In-socket auth frame required" in msg.get("message", "")
+
+
+def test_websocket_handshake_header_auth(test_app):
+    """Verify WebSocket handshake succeeds with standard Authorization Bearer header."""
+    app, _ = test_app
+    client = TestClient(app)
+
+    with client.websocket_connect(
+        "/ws/chat",
+        headers={"Authorization": "Bearer test-secret-token-12345"},
+    ) as ws:
+        # Client is already authenticated via header, so submit action works immediately!
+        ws.send_json({"action": "cancel", "task_id": "nonexistent"})
+        msg = ws.receive_json()
+        assert msg.get("event") == "cancelled"
+
+
 def test_websocket_origin_and_auth_rejection(test_app):
     """Verify WebSocket rejects connections with untrusted origin or invalid token."""
     app, _ = test_app

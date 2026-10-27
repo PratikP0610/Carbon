@@ -273,8 +273,13 @@ def create_app() -> FastAPI:
 
     # --- WebSocket Streaming Endpoint ---
 
+    active_ws_connections = 0
+    MAX_CONCURRENT_WS_CONNECTIONS = 5
+    WS_AUTH_TIMEOUT_SECONDS = 3.0
+
     @app.websocket("/ws/chat")
-    async def websocket_chat_endpoint(websocket: WebSocket, token: str | None = None):
+    async def websocket_chat_endpoint(websocket: WebSocket):
+        nonlocal active_ws_connections
         c = await get_core()
 
         # Origin Validation for WebSocket
@@ -284,26 +289,32 @@ def create_app() -> FastAPI:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
 
+        # Enforce connection limits
+        if active_ws_connections >= MAX_CONCURRENT_WS_CONNECTIONS:
+            logger.warning("Rejected WebSocket connection: active connection limit reached.")
+            await websocket.close(code=status.WS_1013_TRY_AGAIN_LATER)
+            return
+
         expected_token = getattr(app.state, "api_token", None)
         authenticated = False
         if not expected_token:
             authenticated = True
         else:
-            # 1. Check Authorization header
+            # 1. Prefer Handshake Header authentication
             auth_header = websocket.headers.get("authorization")
             if auth_header and auth_header.startswith("Bearer "):
                 if auth_header[7:].strip() == expected_token:
                     authenticated = True
-            # 2. Check query parameter token
-            if not authenticated and token and token == expected_token:
-                authenticated = True
 
         await websocket.accept()
 
-        # 3. If not yet authenticated, require auth frame within 5 seconds
+        # 2. In-socket authentication fallback with short timeout (3.0s)
+        # Note: Query-string token authentication is strictly removed to prevent URL/log leaks.
         if not authenticated and expected_token:
             try:
-                auth_data = await asyncio.wait_for(websocket.receive_text(), timeout=5.0)
+                auth_data = await asyncio.wait_for(
+                    websocket.receive_text(), timeout=WS_AUTH_TIMEOUT_SECONDS
+                )
                 auth_payload = json.loads(auth_data)
                 if (
                     auth_payload.get("action") == "auth"
@@ -312,23 +323,29 @@ def create_app() -> FastAPI:
                     authenticated = True
                     await websocket.send_json({"event": "authenticated"})
                 else:
-                    logger.warning(
-                        "WebSocket handshake authentication failed: invalid token frame."
-                    )
+                    logger.warning("WebSocket authentication failed: invalid token in auth frame.")
                     await websocket.send_json(
-                        {"event": "error", "message": "Authentication failed."}
+                        {
+                            "event": "error",
+                            "message": "Authentication failed. In-socket auth frame required.",
+                        }
                     )
                     await websocket.close(code=4401)
                     return
             except Exception as e:
-                logger.warning(f"WebSocket handshake failed without authentication: {e}")
+                logger.warning(
+                    f"WebSocket handshake failed without authentication within {WS_AUTH_TIMEOUT_SECONDS}s: {e}"
+                )
                 try:
                     await websocket.close(code=4401)
                 except Exception:
                     pass
                 return
 
-        logger.info("WebSocket client connected and authenticated to /ws/chat")
+        active_ws_connections += 1
+        logger.info(
+            f"WebSocket client connected and authenticated to /ws/chat (active: {active_ws_connections})"
+        )
 
         try:
             while True:
@@ -379,6 +396,8 @@ def create_app() -> FastAPI:
             logger.info("WebSocket client disconnected.")
         except Exception as e:
             logger.error(f"WebSocket error: {e}", exc_info=True)
+        finally:
+            active_ws_connections = max(0, active_ws_connections - 1)
 
     return app
 

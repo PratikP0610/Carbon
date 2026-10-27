@@ -36,6 +36,7 @@ class CarbonModelSupervisor(ICarbonModelSupervisor):
         self.current_pressure_level: int = 1
         self.max_context_tokens: int = 32768
         self.idle_specialist_models_unloaded: bool = False
+        self._deferred_critical_unload: bool = False
 
     async def initialize(self) -> None:
         """Discover and register available models from the local provider."""
@@ -134,6 +135,17 @@ class CarbonModelSupervisor(ICarbonModelSupervisor):
         self._active_leases.discard(task_id)
         if len(self._active_leases) == 0:
             self._drain_event.set()
+            if (
+                self._deferred_critical_unload
+                and self._active_model
+                and self._active_model.is_active
+            ):
+                logger.critical(
+                    "Executing deferred Level 4 model eviction now that inference lease has drained."
+                )
+                await self.provider.unload_model(self._active_model.id)
+                self._active_model.is_active = False
+                self._deferred_critical_unload = False
 
         if self._inference_lock.locked():
             self._inference_lock.release()
@@ -249,8 +261,19 @@ class CarbonModelSupervisor(ICarbonModelSupervisor):
             # Level 4: Critical
             self.max_context_tokens = 4096
             self.idle_specialist_models_unloaded = True
-            # Unload active chat model to immediately relieve system memory
-            if self._active_model and self._active_model.is_active:
+
+            # Active-Inference Protection:
+            # If an inference lease is active, protect ongoing generation and defer unload until release
+            if len(self._active_leases) > 0:
+                self._deferred_critical_unload = True
+                logger.warning(
+                    f"Memory Pressure Level 4 (Critical): Inference lease active ({list(self._active_leases)}). "
+                    "Protecting active inference; deferring model unload until lease release."
+                )
+                action_summary["actions"].append(
+                    f"Active inference protected for task(s) {list(self._active_leases)}; model unload deferred."
+                )
+            elif self._active_model and self._active_model.is_active:
                 await self.provider.unload_model(self._active_model.id)
                 self._active_model.is_active = False
                 action_summary["actions"].append(f"Unloaded active model '{self._active_model.id}'")
@@ -263,7 +286,7 @@ class CarbonModelSupervisor(ICarbonModelSupervisor):
                 ]
             )
             logger.critical(
-                "Memory Pressure Level 4 (Critical): Evicted chat model, restricted context to 4K."
+                "Memory Pressure Level 4 (Critical): Evicted or deferred chat model, restricted context to 4K."
             )
 
         return action_summary

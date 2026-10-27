@@ -1,0 +1,62 @@
+{
+  "hardware": "Apple Silicon (M5 MacBook Air, macOS Darwin)",
+  "model_id": "qwen3.5:9b",
+  "verification_timestamp": 1793127560.201659,
+  "stages": {
+    "stage_1_loaded_state": {
+      "success": true,
+      "prewarm_duration_s": 1.359,
+      "size_mb": 5824.61,
+      "size_vram_mb": 5824.61,
+      "ollama_rss_mb": 44.55,
+      "raw_ps_entry": {
+        "name": "qwen3.5:9b",
+        "model": "qwen3.5:9b",
+        "size": 6107546253,
+        "digest": "56671c2ab9385f9cfcb404638e32cd62d88e3501d44822208363c010179a3c90",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen35",
+          "families": [
+            "qwen35"
+          ],
+          "parameter_size": "9.0B",
+          "quantization_level": "Q4_K_M"
+        },
+        "expires_at": "2026-10-28T00:34:21.593182+05:30",
+        "size_vram": 6107546253,
+        "context_length": 4096
+      }
+    },
+    "stage_2_active_inference_protection": {
+      "lease_held": "hw-verification-active-task",
+      "pressure_level_applied": 4,
+      "deferred_unload_flag": true,
+      "model_preserved_during_inference": true,
+      "actions": [
+        "Active inference protected for task(s) ['hw-verification-active-task']; model unload deferred.",
+        "Capped context window to 4,096 tokens",
+        "Prohibited deep reasoning tasks",
+        "Dispatched desktop memory warning alert"
+      ],
+      "evicted_after_release": true
+    },
+    "stage_3_unload_reclamation": {
+      "unload_success": true,
+      "unload_duration_s": 0.008,
+      "is_completely_unloaded": true,
+      "vram_reclaimed_mb": 5824.61,
+      "rss_before_mb": 46.3,
+      "rss_after_mb": 46.31,
+      "rss_delta_mb": -0.01
+    },
+    "stage_4_reload_recovery": {
+      "recovery_success": true,
+      "total_reload_latency_s": 2.075,
+      "ollama_load_duration_s": 1.36,
+      "tokens_generated": 10
+    }
+  },
+  "ollama_pid": 9267
+}
