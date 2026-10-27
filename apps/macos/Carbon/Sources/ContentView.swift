@@ -1,0 +1,227 @@
+import SwiftUI
+
+public struct ContentView: View {
+    @StateObject private var client = CarbonClient()
+
+    public init() {}
+
+    public var body: some View {
+        VStack(spacing: 0) {
+            // Header Bar
+            headerView
+
+            Divider()
+
+            // Chat Scroll Area
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 14) {
+                        if client.messages.isEmpty {
+                            emptyStateView
+                        } else {
+                            ForEach(client.messages) { message in
+                                MessageBubbleView(message: message)
+                                    .id(message.id)
+                            }
+                        }
+                    }
+                    .padding()
+                }
+                .onChange(of: client.messages.count) { _, _ in
+                    if let last = client.messages.last {
+                        withAnimation {
+                            proxy.scrollTo(last.id, anchor: .bottom)
+                        }
+                    }
+                }
+            }
+
+            Divider()
+
+            // Bottom Input Bar
+            inputBarView
+        }
+        .frame(minWidth: 640, minHeight: 480)
+        .background(Color(NSColor.windowBackgroundColor))
+    }
+
+    private var headerView: some View {
+        HStack(spacing: 12) {
+            HStack(spacing: 6) {
+                Image(systemName: "cpu")
+                    .foregroundColor(.accentColor)
+                    .font(.system(size: 16, weight: .bold))
+                Text("CARBON")
+                    .font(.system(size: 14, weight: .black, design: .monospaced))
+            }
+
+            Spacer()
+
+            // Model Badge
+            HStack(spacing: 4) {
+                Text("MODEL:")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(.secondary)
+                Text(client.activeModel)
+                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.secondary.opacity(0.15))
+                    .cornerRadius(4)
+            }
+
+            // Reasoning Depth Picker
+            Picker("", selection: $client.reasoningDepth) {
+                Text("Instant").tag("instant")
+                Text("Standard").tag("standard")
+                Text("Deep").tag("deep")
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 220)
+
+            // Connection Status Pill
+            HStack(spacing: 4) {
+                Circle()
+                    .fill(client.isConnected ? Color.green : Color.red)
+                    .frame(width: 8, height: 8)
+                Text(client.isConnected ? "LOCAL" : "OFFLINE")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(client.isConnected ? .green : .red)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color.secondary.opacity(0.1))
+            .cornerRadius(12)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+    }
+
+    private var emptyStateView: some View {
+        VStack(spacing: 12) {
+            Spacer().frame(height: 80)
+            Image(systemName: "sparkles")
+                .font(.system(size: 44))
+                .foregroundColor(.accentColor)
+            Text("Carbon 1.0.0")
+                .font(.title2.weight(.bold))
+            Text("Intelligent, local-first computing assistant powered by Qwen 3.5 9B on Apple Silicon.")
+                .font(.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 420)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var inputBarView: some View {
+        HStack(spacing: 10) {
+            TextField("Ask Carbon anything or give a task...", text: $client.inputText)
+                .textFieldStyle(.plain)
+                .font(.system(size: 14))
+                .padding(10)
+                .background(Color(NSColor.controlBackgroundColor))
+                .cornerRadius(8)
+                .onSubmit {
+                    submitCurrentText()
+                }
+
+            if client.isGenerating {
+                Button(action: {
+                    client.cancelCurrentTask()
+                }) {
+                    Image(systemName: "stop.fill")
+                        .foregroundColor(.red)
+                        .padding(8)
+                }
+                .buttonStyle(.plain)
+                .help("Cancel task")
+            } else {
+                Button(action: {
+                    submitCurrentText()
+                }) {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.system(size: 24))
+                        .foregroundColor(client.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .secondary : .accentColor)
+                }
+                .buttonStyle(.plain)
+                .disabled(client.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .help("Send instruction")
+            }
+        }
+        .padding(12)
+    }
+
+    private func submitCurrentText() {
+        let text = client.inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        client.inputText = ""
+        client.sendMessage(text)
+    }
+}
+
+public struct MessageBubbleView: View {
+    public let message: ChatDisplayMessage
+
+    public var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            if message.role == "user" {
+                Spacer()
+                Text(message.text)
+                    .font(.system(size: 14))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(Color.accentColor)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                    .frame(maxWidth: 520, alignment: .trailing)
+            } else {
+                Image(systemName: "cpu")
+                    .foregroundColor(.accentColor)
+                    .font(.system(size: 16, weight: .bold))
+                    .padding(.top, 2)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    if let thinking = message.thinking, !thinking.isEmpty {
+                        DisclosureGroup {
+                            Text(thinking)
+                                .font(.system(size: 12, design: .monospaced))
+                                .foregroundColor(.secondary)
+                                .padding(.top, 4)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "brain")
+                                    .foregroundColor(.purple)
+                                    .font(.system(size: 11))
+                                Text("Thinking Process")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundColor(.purple)
+                            }
+                        }
+                        .padding(8)
+                        .background(Color.purple.opacity(0.08))
+                        .cornerRadius(8)
+                    }
+
+                    if message.text.isEmpty && message.isStreaming {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                            .padding(.vertical, 6)
+                    } else {
+                        Text(message.text)
+                            .font(.system(size: 14))
+                            .textSelection(.enabled)
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(Color.secondary.opacity(0.1))
+                .cornerRadius(12)
+                .frame(maxWidth: 580, alignment: .leading)
+
+                Spacer()
+            }
+        }
+    }
+}
