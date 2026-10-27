@@ -7,6 +7,7 @@ and Total Latency across repeated iterations under documented test conditions.
 import json
 import statistics
 import time
+
 import httpx
 
 URL = "http://127.0.0.1:11434"
@@ -23,11 +24,16 @@ def run_benchmark(iterations: int = 5):
 
     print("--- 2. Executing Cold Load Inference ---", flush=True)
     t0 = time.perf_counter()
-    cold_res = client.post("/api/generate", json={"model": MODEL, "prompt": "Status", "stream": False})
+    cold_res = client.post(
+        "/api/generate", json={"model": MODEL, "prompt": "Status", "stream": False}
+    )
     t_cold_elapsed = time.perf_counter() - t0
     cold_data = cold_res.json()
     cold_load_dur = cold_data.get("load_duration", 0) / 1e9
-    print(f"Cold Total Elapsed: {t_cold_elapsed:.3f}s | Internal Load Duration: {cold_load_dur:.3f}s", flush=True)
+    print(
+        f"Cold Total Elapsed: {t_cold_elapsed:.3f}s | Internal Load Duration: {cold_load_dur:.3f}s",
+        flush=True,
+    )
 
     # 2. Warm Iterations
     print(f"\n--- 3. Running Warm Test Iterations (N = {iterations}) ---", flush=True)
@@ -42,7 +48,9 @@ def run_benchmark(iterations: int = 5):
         eval_count = 0
         eval_dur = 0.0
 
-        with client.stream("POST", "/api/generate", json={"model": MODEL, "prompt": prompt, "stream": True}) as stream:
+        with client.stream(
+            "POST", "/api/generate", json={"model": MODEL, "prompt": prompt, "stream": True}
+        ) as stream:
             for line in stream.iter_lines():
                 if not line:
                     continue
@@ -62,7 +70,10 @@ def run_benchmark(iterations: int = 5):
         speed_list.append(speed)
         total_lat_list.append(total_lat)
 
-        print(f"Iter {i + 1:02d}: TTFT = {ttft * 1000:.1f}ms | Speed = {speed:.1f} tok/s | Total = {total_lat:.2f}s", flush=True)
+        print(
+            f"Iter {i + 1:02d}: TTFT = {ttft * 1000:.1f}ms | Speed = {speed:.1f} tok/s | Total = {total_lat:.2f}s",
+            flush=True,
+        )
         time.sleep(0.5)
 
     def compute_stats(arr):
@@ -80,19 +91,31 @@ def run_benchmark(iterations: int = 5):
     lat_stats = compute_stats(total_lat_list)
 
     print("\n==================================================", flush=True)
-    print("      STATISTICAL BENCHMARK RESULTS (N={})        ".format(iterations), flush=True)
+    print(f"      STATISTICAL BENCHMARK RESULTS (N={iterations})        ", flush=True)
     print("==================================================", flush=True)
     print(f"Cold Model Load Duration : {cold_load_dur:.3f} s")
     print(f"Cold Total Latency       : {t_cold_elapsed:.3f} s")
-    print("Warm TTFT (ms)           : Min={:.1f} | Median={:.1f} | P95={:.1f} | Max={:.1f}".format(
-        ttft_stats['min'] * 1000, ttft_stats['median'] * 1000, ttft_stats['p95'] * 1000, ttft_stats['max'] * 1000
-    ), flush=True)
-    print("Generation Speed (tok/s) : Min={:.1f} | Median={:.1f} | P95={:.1f} | Max={:.1f}".format(
-        speed_stats['min'], speed_stats['median'], speed_stats['p95'], speed_stats['max']
-    ), flush=True)
-    print("Total Latency (s)        : Min={:.2f} | Median={:.2f} | P95={:.2f} | Max={:.2f}".format(
-        lat_stats['min'], lat_stats['median'], lat_stats['p95'], lat_stats['max']
-    ), flush=True)
+    print(
+        "Warm TTFT (ms)           : Min={:.1f} | Median={:.1f} | P95={:.1f} | Max={:.1f}".format(
+            ttft_stats["min"] * 1000,
+            ttft_stats["median"] * 1000,
+            ttft_stats["p95"] * 1000,
+            ttft_stats["max"] * 1000,
+        ),
+        flush=True,
+    )
+    print(
+        "Generation Speed (tok/s) : Min={:.1f} | Median={:.1f} | P95={:.1f} | Max={:.1f}".format(
+            speed_stats["min"], speed_stats["median"], speed_stats["p95"], speed_stats["max"]
+        ),
+        flush=True,
+    )
+    print(
+        "Total Latency (s)        : Min={:.2f} | Median={:.2f} | P95={:.2f} | Max={:.2f}".format(
+            lat_stats["min"], lat_stats["median"], lat_stats["p95"], lat_stats["max"]
+        ),
+        flush=True,
+    )
     print("==================================================", flush=True)
 
 

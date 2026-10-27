@@ -39,6 +39,7 @@ stateDiagram-v2
 ```python
 class InferenceLease:
     """Tokenized lease conferring temporary right to invoke active chat model."""
+
     lease_id: str
     task_id: str
     model_id: str

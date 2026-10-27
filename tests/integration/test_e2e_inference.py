@@ -1,7 +1,9 @@
 """End-to-End integration test validating real local inference with Qwen 3.5 9B."""
 
 from pathlib import Path
+
 import pytest
+
 from carbon.config.settings import Settings
 from carbon.core.orchestrator import CarbonCore
 from carbon.interfaces.models import TaskRequest, TaskState
