@@ -57,7 +57,8 @@ class CarbonModelSupervisor(ICarbonModelSupervisor):
                 family="qwen35",
                 parameter_size="9.0B",
                 quantization="Q4_K_M",
-                context_length=262144,
+                context_length=4096,
+                max_architectural_context=262144,
                 memory_footprint_mb=6200,
                 capabilities=[
                     ModelCapability.COMPLETION,

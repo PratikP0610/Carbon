@@ -26,8 +26,21 @@ class IModelProvider(Protocol):
     async def list_available_models(self) -> list[ModelMetadata]: ...
     async def is_healthy(self) -> bool: ...
     async def generate_stream(
-        self, model_id: str, prompt: str, system: str | None = None
+        self,
+        model_id: str,
+        prompt: str,
+        system: str | None = None,
+        think: bool | None = None,
+        options: dict[str, Any] | None = None,
     ) -> AsyncGenerator[str, None]: ...
+    async def generate_stream_events(
+        self,
+        model_id: str,
+        prompt: str,
+        system: str | None = None,
+        think: bool | None = None,
+        options: dict[str, Any] | None = None,
+    ) -> AsyncGenerator[dict[str, Any], None]: ...
     async def chat_stream(
         self,
         model_id: str,

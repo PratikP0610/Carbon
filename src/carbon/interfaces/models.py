@@ -67,7 +67,10 @@ class ModelMetadata(BaseModel):
     family: str = Field(default="qwen35", description="Model architecture family")
     parameter_size: str = Field(default="9.0B", description="Model parameter size")
     quantization: str = Field(default="Q4_K_M", description="Quantization level")
-    context_length: int = Field(default=262144, description="Context window size in tokens")
+    context_length: int = Field(default=4096, description="Active runtime context window in tokens")
+    max_architectural_context: int = Field(
+        default=262144, description="Model theoretical architectural context limit in tokens"
+    )
     memory_footprint_mb: int = Field(default=6200, description="Estimated memory footprint in MB")
     capabilities: list[ModelCapability] = Field(default_factory=list)
     is_active: bool = Field(

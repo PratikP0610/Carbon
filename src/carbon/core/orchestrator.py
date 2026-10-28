@@ -283,11 +283,30 @@ class CarbonCore:
                 if task.reasoning_depth == ReasoningDepth.INSTANT:
                     system_prompt += "Provide direct, concise answers without verbose reasoning.\n"
 
+                # Configure reasoning and generation options based on task reasoning depth
+                think_flag: bool | None = None
+                options: dict[str, Any] | None = None
+
+                if task.reasoning_depth == ReasoningDepth.INSTANT:
+                    think_flag = False
+                    options = {
+                        "num_predict": 120,
+                        "temperature": 0.2,
+                    }
+                elif task.reasoning_depth == ReasoningDepth.STANDARD:
+                    # Preserve existing reasoning behaviour; do not introduce an unvalidated low limit
+                    think_flag = True
+                elif task.reasoning_depth == ReasoningDepth.DEEP:
+                    # Preserve existing reasoning behaviour; do not introduce an unvalidated low limit
+                    think_flag = True
+
                 accumulated_tokens: list[str] = []
                 async for chunk in self.provider.generate_stream_events(
                     model_id=model.id,
                     prompt=task.prompt,
                     system=system_prompt,
+                    think=think_flag,
+                    options=options,
                 ):
                     if task.cancel_event.is_set():
                         logger.info(f"Task '{task.task_id}' was cancelled mid-stream.")
@@ -313,7 +332,20 @@ class CarbonCore:
                         }
 
                 full_response = "".join(accumulated_tokens)
-                task.result = full_response
+                if not full_response.strip():
+                    fallback_msg = (
+                        "No response was generated within the token limit. "
+                        "Please try again or adjust reasoning depth."
+                    )
+                    task.result = fallback_msg
+                    yield {
+                        "event": "token",
+                        "text": fallback_msg,
+                        "t_token": time.time(),
+                    }
+                else:
+                    task.result = full_response
+
                 task.state = TaskState.COMPLETED
                 task.completed_at = datetime.now(UTC)
 

@@ -1,0 +1,317 @@
+{
+  "1_factual": {
+    "name": "1. Simple Factual",
+    "reasoning": "instant",
+    "total_time_median": 0.18994766598916613,
+    "total_time_p95": 0.38447336628742046,
+    "ui_ttft_median_ms": 94.41545799199957,
+    "ui_ttft_p95_ms": 289.2863829896669,
+    "throughput_median": 20.935347794529353,
+    "answer_tokens_median": 2,
+    "thinking_tokens_median": 0,
+    "correctness": "100%",
+    "sample_output": "Tokyo",
+    "runs": [
+      {
+        "iteration": 1,
+        "total_time_s": 0.40608733298722655,
+        "ui_ttft_s": 0.3109387079894077,
+        "answer_tokens": 2,
+        "thinking_tokens": 0,
+        "tok_per_sec": 21.019746738808337,
+        "correct": true,
+        "full_answer": "Tokyo"
+      },
+      {
+        "iteration": 2,
+        "total_time_s": 0.18994766598916613,
+        "ui_ttft_s": 0.09441545799199957,
+        "answer_tokens": 2,
+        "thinking_tokens": 0,
+        "tok_per_sec": 20.935347794529353,
+        "correct": true,
+        "full_answer": "Tokyo"
+      },
+      {
+        "iteration": 3,
+        "total_time_s": 0.1846300000033807,
+        "ui_ttft_s": 0.08889220800483599,
+        "answer_tokens": 2,
+        "thinking_tokens": 0,
+        "tok_per_sec": 20.890391957550072,
+        "correct": true,
+        "full_answer": "Tokyo"
+      }
+    ]
+  },
+  "2_arithmetic": {
+    "name": "2. Basic Arithmetic",
+    "reasoning": "instant",
+    "total_time_median": 0.1857102080102777,
+    "total_time_p95": 0.389917283008981,
+    "ui_ttft_median_ms": 90.48366700881161,
+    "ui_ttft_p95_ms": 294.45535419945367,
+    "throughput_median": 20.975170715404744,
+    "answer_tokens_median": 2,
+    "thinking_tokens_median": 0,
+    "correctness": "100%",
+    "sample_output": "95",
+    "runs": [
+      {
+        "iteration": 1,
+        "total_time_s": 0.41260695800883695,
+        "ui_ttft_s": 0.31711887499841396,
+        "answer_tokens": 2,
+        "thinking_tokens": 0,
+        "tok_per_sec": 20.945022006376337,
+        "correct": true,
+        "full_answer": "95"
+      },
+      {
+        "iteration": 2,
+        "total_time_s": 0.1857102080102777,
+        "ui_ttft_s": 0.09048366700881161,
+        "answer_tokens": 2,
+        "thinking_tokens": 0,
+        "tok_per_sec": 21.002548018300992,
+        "correct": true,
+        "full_answer": "95"
+      },
+      {
+        "iteration": 3,
+        "total_time_s": 0.18363512499490753,
+        "ui_ttft_s": 0.08828429199638776,
+        "answer_tokens": 2,
+        "thinking_tokens": 0,
+        "tok_per_sec": 20.975170715404744,
+        "correct": true,
+        "full_answer": "95"
+      }
+    ]
+  },
+  "3_conversation": {
+    "name": "3. Normal Conversation",
+    "reasoning": "instant",
+    "total_time_median": 2.157754375002696,
+    "total_time_p95": 2.15816259971034,
+    "ui_ttft_median_ms": 92.1017080108868,
+    "ui_ttft_p95_ms": 297.60853330226377,
+    "throughput_median": 21.78009964395268,
+    "answer_tokens_median": 45,
+    "thinking_tokens_median": 0,
+    "correctness": "100%",
+    "sample_output": "I can help you manage files, write code, analyze data, and automate tasks directly within your macOS environment. Just ask me to perform any specific action or retrieve information from your local system.",
+    "runs": [
+      {
+        "iteration": 1,
+        "total_time_s": 2.0656634159968235,
+        "ui_ttft_s": 0.3204426250013057,
+        "answer_tokens": 38,
+        "thinking_tokens": 0,
+        "tok_per_sec": 21.773749313589054,
+        "correct": true,
+        "full_answer": "I can help you manage files, write code, analyze data, and automate tasks directly within your macOS environment. Just ask me to perform any specific action or retrieve information from your local system."
+      },
+      {
+        "iteration": 2,
+        "total_time_s": 2.157754375002696,
+        "ui_ttft_s": 0.09207149999565445,
+        "answer_tokens": 45,
+        "thinking_tokens": 0,
+        "tok_per_sec": 21.784563615480714,
+        "correct": true,
+        "full_answer": "I can help you manage files, write code, analyze data, and automate tasks directly within your macOS workflow. Just ask me to open an app, summarize a document, or generate a script for any specific need you have."
+      },
+      {
+        "iteration": 3,
+        "total_time_s": 2.1582079580111895,
+        "ui_ttft_s": 0.0921017080108868,
+        "answer_tokens": 45,
+        "thinking_tokens": 0,
+        "tok_per_sec": 21.78009964395268,
+        "correct": true,
+        "full_answer": "I can help you manage files, write code, analyze data, and automate tasks directly within your macOS workflow. Just ask me to open an app, summarize a document, or generate a script for any specific need you have."
+      }
+    ]
+  },
+  "4a_coding_standard": {
+    "name": "4a. Coding (Standard - Reasoning Preserved)",
+    "reasoning": "standard",
+    "total_time_median": 28.030075958013185,
+    "total_time_p95": 93.22542465860023,
+    "ui_ttft_median_ms": 25997.628833007184,
+    "ui_ttft_p95_ms": 91819.87077139784,
+    "throughput_median": 10.824389834955749,
+    "answer_tokens_median": 14,
+    "thinking_tokens_median": 327,
+    "correctness": "100%",
+    "sample_output": "```python\ndef is_even(number):\n    return number % 2 == 0\n```",
+    "runs": [
+      {
+        "iteration": 1,
+        "total_time_s": 18.65036312500888,
+        "ui_ttft_s": 17.721367582998937,
+        "answer_tokens": 14,
+        "thinking_tokens": 297,
+        "tok_per_sec": 15.07004002377673,
+        "correct": true,
+        "full_answer": "```python\ndef is_even(number):\n    return number % 2 == 0\n```"
+      },
+      {
+        "iteration": 2,
+        "total_time_s": 100.4693522919988,
+        "ui_ttft_s": 99.1334532089968,
+        "answer_tokens": 14,
+        "thinking_tokens": 1710,
+        "tok_per_sec": 10.47983352794845,
+        "correct": true,
+        "full_answer": "```python\ndef is_even(n):\n    return n % 2 == 0\n```"
+      },
+      {
+        "iteration": 3,
+        "total_time_s": 28.030075958013185,
+        "ui_ttft_s": 25.997628833007184,
+        "answer_tokens": 22,
+        "thinking_tokens": 327,
+        "tok_per_sec": 10.824389834955749,
+        "correct": true,
+        "full_answer": "```python\ndef is_even(n):\n    \"\"\"Check if an integer is even.\"\"\"\n    return n % 2 == 0\n```"
+      }
+    ]
+  },
+  "4b_coding_instant": {
+    "name": "4b. Coding (Instant - Reasoning Bypassed)",
+    "reasoning": "instant",
+    "total_time_median": 1.4858187500067288,
+    "total_time_p95": 1.7336133128017537,
+    "ui_ttft_median_ms": 155.58166599657852,
+    "ui_ttft_p95_ms": 555.7632541080237,
+    "throughput_median": 11.570511301773122,
+    "answer_tokens_median": 14,
+    "thinking_tokens_median": 0,
+    "correctness": "100%",
+    "sample_output": "```python\ndef is_even(n):\n    return n % 2 == 0\n```",
+    "runs": [
+      {
+        "iteration": 1,
+        "total_time_s": 1.7611460420012008,
+        "ui_ttft_s": 0.6002278750092955,
+        "answer_tokens": 14,
+        "thinking_tokens": 0,
+        "tok_per_sec": 12.059420205539446,
+        "correct": true,
+        "full_answer": "```python\ndef is_even(n):\n    return n % 2 == 0\n```"
+      },
+      {
+        "iteration": 2,
+        "total_time_s": 1.3390365410014056,
+        "ui_ttft_s": 0.12906408301205374,
+        "answer_tokens": 14,
+        "thinking_tokens": 0,
+        "tok_per_sec": 11.570511301773122,
+        "correct": true,
+        "full_answer": "```python\ndef is_even(n):\n    return n % 2 == 0\n```"
+      },
+      {
+        "iteration": 3,
+        "total_time_s": 1.4858187500067288,
+        "ui_ttft_s": 0.15558166599657852,
+        "answer_tokens": 14,
+        "thinking_tokens": 0,
+        "tok_per_sec": 10.524439717013012,
+        "correct": true,
+        "full_answer": "```python\ndef is_even(n):\n    return n % 2 == 0\n```"
+      }
+    ]
+  },
+  "5a_reasoning_sheep": {
+    "name": "5a. Complex Reasoning (Sheep Puzzle)",
+    "reasoning": "standard",
+    "total_time_median": 48.148785915996996,
+    "total_time_p95": 49.68533832910907,
+    "ui_ttft_median_ms": 46253.045833000215,
+    "ui_ttft_p95_ms": 47822.270721098175,
+    "throughput_median": 14.769957258981238,
+    "answer_tokens_median": 28,
+    "thinking_tokens_median": 578,
+    "correctness": "100%",
+    "sample_output": "The farmer has 9 sheep remaining. This is because the phrase \"all but 9 run away\" indicates that only those specific nine stayed behind.",
+    "runs": [
+      {
+        "iteration": 1,
+        "total_time_s": 49.856066375010414,
+        "ui_ttft_s": 47.99662904199795,
+        "answer_tokens": 28,
+        "thinking_tokens": 578,
+        "tok_per_sec": 15.058318719801832,
+        "correct": true,
+        "full_answer": "The farmer has 9 sheep remaining. This is because the phrase \"all but 9 run away\" indicates that only those specific nine stayed behind."
+      },
+      {
+        "iteration": 2,
+        "total_time_s": 48.148785915996996,
+        "ui_ttft_s": 46.253045833000215,
+        "answer_tokens": 28,
+        "thinking_tokens": 611,
+        "tok_per_sec": 14.769957258981238,
+        "correct": true,
+        "full_answer": "The phrase \"all but 9\" implies that 9 sheep stayed behind while the others ran away. Consequently, the farmer has 9 sheep left."
+      },
+      {
+        "iteration": 3,
+        "total_time_s": 41.634740291992784,
+        "ui_ttft_s": 39.15079058299307,
+        "answer_tokens": 36,
+        "thinking_tokens": 524,
+        "tok_per_sec": 14.493047049047203,
+        "correct": true,
+        "full_answer": "The farmer has 9 sheep left because the phrase \"all but 9\" indicates that exactly 9 did not run away. Therefore, those 9 sheep are the ones remaining with the farmer."
+      }
+    ]
+  },
+  "5b_reasoning_bat_ball": {
+    "name": "5b. Complex Reasoning (Bat & Ball Puzzle)",
+    "reasoning": "standard",
+    "total_time_median": 29.54196712501289,
+    "total_time_p95": 40.555373999995936,
+    "ui_ttft_median_ms": 29150.735541014,
+    "ui_ttft_p95_ms": 40033.01402970246,
+    "throughput_median": 15.336185127673785,
+    "answer_tokens_median": 6,
+    "thinking_tokens_median": 389,
+    "correctness": "100%",
+    "sample_output": "The ball costs 5 cents.",
+    "runs": [
+      {
+        "iteration": 1,
+        "total_time_s": 28.408297166999546,
+        "ui_ttft_s": 27.948711834003916,
+        "answer_tokens": 6,
+        "thinking_tokens": 364,
+        "tok_per_sec": 13.055246913323609,
+        "correct": true,
+        "full_answer": "The ball costs 5 cents."
+      },
+      {
+        "iteration": 2,
+        "total_time_s": 29.54196712501289,
+        "ui_ttft_s": 29.150735541014,
+        "answer_tokens": 6,
+        "thinking_tokens": 389,
+        "tok_per_sec": 15.336185127673785,
+        "correct": true,
+        "full_answer": "The ball costs 5 cents."
+      },
+      {
+        "iteration": 3,
+        "total_time_s": 41.77908587499405,
+        "ui_ttft_s": 41.24215608400118,
+        "answer_tokens": 9,
+        "thinking_tokens": 562,
+        "tok_per_sec": 16.76196804680462,
+        "correct": true,
+        "full_answer": "The ball costs $0.05."
+      }
+    ]
+  }
+}

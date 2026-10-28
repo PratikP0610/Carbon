@@ -46,6 +46,21 @@ class OllamaProvider(IModelProvider):
                 if res.status_code != 200:
                     return models
                 data = res.json()
+
+                # Query running models from /api/ps to detect actual active runtime context length
+                active_context_by_model: dict[str, int] = {}
+                try:
+                    ps_res = await client.get("/api/ps")
+                    if ps_res.status_code == 200:
+                        ps_data = ps_res.json()
+                        for running in ps_data.get("models", []):
+                            r_name = running.get("name", "")
+                            r_ctx = running.get("context_length")
+                            if r_name and r_ctx:
+                                active_context_by_model[r_name] = int(r_ctx)
+                except Exception:
+                    pass
+
                 for item in data.get("models", []):
                     name = item.get("name", "")
                     details = item.get("details", {})
@@ -62,6 +77,9 @@ class OllamaProvider(IModelProvider):
                     if ModelCapability.CHAT not in capabilities:
                         capabilities.append(ModelCapability.CHAT)
 
+                    arch_context = details.get("context_length", 262144)
+                    runtime_context = active_context_by_model.get(name, 4096)
+
                     metadata = ModelMetadata(
                         id=name,
                         name=name,
@@ -69,7 +87,8 @@ class OllamaProvider(IModelProvider):
                         family=details.get("family", "unknown"),
                         parameter_size=details.get("parameter_size", "unknown"),
                         quantization=details.get("quantization_level", "unknown"),
-                        context_length=details.get("context_length", 262144),
+                        context_length=runtime_context,
+                        max_architectural_context=arch_context,
                         memory_footprint_mb=int(item.get("size", 0) / (1024 * 1024)),
                         capabilities=capabilities,
                         is_active=False,
@@ -81,7 +100,12 @@ class OllamaProvider(IModelProvider):
         return models
 
     async def generate_stream(
-        self, model_id: str, prompt: str, system: str | None = None
+        self,
+        model_id: str,
+        prompt: str,
+        system: str | None = None,
+        think: bool | None = None,
+        options: dict[str, Any] | None = None,
     ) -> AsyncGenerator[str, None]:
         """Stream generated text tokens for a prompt."""
         payload: dict[str, Any] = {
@@ -91,6 +115,10 @@ class OllamaProvider(IModelProvider):
         }
         if system:
             payload["system"] = system
+        if think is not None:
+            payload["think"] = think
+        if options:
+            payload["options"] = options
 
         async with self._client() as client:
             async with client.stream("POST", "/api/generate", json=payload) as response:
@@ -111,7 +139,12 @@ class OllamaProvider(IModelProvider):
                         continue
 
     async def generate_stream_events(
-        self, model_id: str, prompt: str, system: str | None = None
+        self,
+        model_id: str,
+        prompt: str,
+        system: str | None = None,
+        think: bool | None = None,
+        options: dict[str, Any] | None = None,
     ) -> AsyncGenerator[dict[str, Any], None]:
         """Stream structured chunks including thinking and response tokens."""
         payload: dict[str, Any] = {
@@ -121,6 +154,10 @@ class OllamaProvider(IModelProvider):
         }
         if system:
             payload["system"] = system
+        if think is not None:
+            payload["think"] = think
+        if options:
+            payload["options"] = options
 
         async with self._client() as client:
             async with client.stream("POST", "/api/generate", json=payload) as response:

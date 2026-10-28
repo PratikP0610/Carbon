@@ -19,17 +19,54 @@ class IntelligenceEngine(IIntelligenceEngine):
     """Understands user intent, estimates complexity, and determines reasoning depth."""
 
     def __init__(self):
-        # Heuristic keywords for fast-path intent classification
+        # Heuristic keywords for deep reasoning classification (takes highest priority)
+        self._deep_patterns = [
+            r"\b(debug|refactor|architect|analy[zs]e|plan\s+step|solve|compare\s+deeply|puzzle)\b",
+            r"\b(code\s+review|multi-step|write\s+an\s+entire|step-by-step)\b",
+        ]
+
+        # Standard reasoning indicators (explanations, algorithms, coding)
+        # Concise instructions must never downgrade these to INSTANT
+        self._standard_indicators = [
+            r"\b(explain|why|how\s+does|how\s+do|how\s+can|how\s+would|how\s+a)\b",
+            r"\b(write\s+(?:a\s+)?python|write\s+(?:a\s+)?function|write\s+code|implement|algorithm|complexity|dijkstra|program|output\s+of)\b",
+            r"\b(compare|trade-offs?|pros\s+and\s+cons|difference\s+between)\b",
+            r"\b(fails?|failing|bug|error|issue|trace|derive|proof|prove)\b",
+        ]
+
+        # Fast-path conversational greetings and system commands
         self._instant_patterns = [
             r"^(hi|hello|hey|status|ping|test|ready)\b",
             r"^open\s+[a-zA-Z0-9\s]+$",
             r"^what\s+time\s+is\s+it",
             r"^who\s+are\s+you",
         ]
-        self._deep_patterns = [
-            r"\b(debug|refactor|architect|analyze|plan\s+step|solve|compare\s+deeply)\b",
-            r"\b(code\s+review|multi-step|write\s+an\s+entire)\b",
+
+        # Robust arithmetic pattern supporting natural whitespace around operators
+        self._arithmetic_pattern = (
+            r"^(?:what\s+is\s+|calculate\s+|compute\s+)?"
+            r"[-+]?\d+(?:\.\d+)?"
+            r"(?:\s*[-+*/×÷]\s*[-+]?\d+(?:\.\d+)?)+"
+            r"(?:\s*\??\s*(?:answer\s+in\s+one\s+word|just\s+the\s+number|in\s+one\s+word|please))?"
+            r"[\s.?!]*$"
+        )
+
+        # Simple factual query patterns (definitions, lookups, naming)
+        self._simple_factual_patterns = [
+            r"^(?:what\s+(?:is|are|was|were))\b",
+            r"^(?:who\s+(?:is|was|developed|created|invented|wrote|discovered))\b",
+            r"^(?:where\s+(?:is|are|was|were))\b",
+            r"^(?:when\s+(?:was|is|were|did))\b",
+            r"^(?:what\s+does\s+[a-zA-Z0-9\s]+\s+stand\s+for)\b",
+            r"^(?:define|definition\s+of|meaning\s+of)\b",
+            r"^(?:name|list)\s+(?:the\s+|a\s+|an\s+|[0-9]+\s+|three\s+|two\s+|four\s+|five\s+)?\b",
+            r"^(?:capital|currency|population|boiling\s+point|freezing\s+point|speed\s+of\s+light)\b",
         ]
+
+        # Explicit concise answer clauses
+        self._concise_answer_clause = (
+            r"\b(answer\s+in\s+one\s+word|just\s+the\s+number|in\s+one\s+word|single\s+word|one\s+word\s+only)\b"
+        )
 
     async def classify_intent(
         self, user_prompt: str, context: dict[str, Any] | None = None
@@ -37,21 +74,7 @@ class IntelligenceEngine(IIntelligenceEngine):
         """Classify user intent, complexity, and determine reasoning depth."""
         prompt_clean = user_prompt.strip().lower()
 
-        # Check instant fast-path patterns
-        for pattern in self._instant_patterns:
-            if re.search(pattern, prompt_clean):
-                category = (
-                    "SYSTEM_COMMAND" if prompt_clean.startswith("open ") else "CONVERSATIONAL"
-                )
-                return TaskIntent(
-                    category=category,
-                    confidence=0.95,
-                    reasoning_depth=ReasoningDepth.INSTANT,
-                    required_capabilities=[ModelCapability.CHAT],
-                    summary=f"Fast-path intent: {category}",
-                )
-
-        # Check deep patterns
+        # 1. Complexity check: Deep reasoning takes absolute priority
         for pattern in self._deep_patterns:
             if re.search(pattern, prompt_clean):
                 return TaskIntent(
@@ -65,7 +88,64 @@ class IntelligenceEngine(IIntelligenceEngine):
                     summary="Deep reasoning task requiring step-by-step analysis",
                 )
 
-        # Default to standard reasoning
+        # 2. Fast conversational greetings and system commands
+        for pattern in self._instant_patterns:
+            if re.search(pattern, prompt_clean):
+                category = (
+                    "SYSTEM_COMMAND" if prompt_clean.startswith("open ") else "CONVERSATIONAL"
+                )
+                return TaskIntent(
+                    category=category,
+                    confidence=0.95,
+                    reasoning_depth=ReasoningDepth.INSTANT,
+                    required_capabilities=[ModelCapability.CHAT],
+                    summary=f"Fast-path intent: {category}",
+                )
+
+        # 3. Direct simple arithmetic calculations with robust whitespace support
+        if re.search(self._arithmetic_pattern, prompt_clean):
+            return TaskIntent(
+                category="CONVERSATIONAL",
+                confidence=0.95,
+                reasoning_depth=ReasoningDepth.INSTANT,
+                required_capabilities=[ModelCapability.CHAT],
+                summary="Fast-path arithmetic calculation",
+            )
+
+        # 4. Standard reasoning indicators: Explanations, algorithms, and code design
+        # Concise instructions must never downgrade these analytical tasks
+        for pattern in self._standard_indicators:
+            if re.search(pattern, prompt_clean):
+                return TaskIntent(
+                    category="GENERAL_QUERY",
+                    confidence=0.85,
+                    reasoning_depth=ReasoningDepth.STANDARD,
+                    required_capabilities=[ModelCapability.CHAT],
+                    summary="Standard analytical or explanatory request",
+                )
+
+        # 5. Simple factual lookup questions (with or without explicit concise instructions)
+        for pattern in self._simple_factual_patterns:
+            if re.search(pattern, prompt_clean):
+                return TaskIntent(
+                    category="CONVERSATIONAL",
+                    confidence=0.92,
+                    reasoning_depth=ReasoningDepth.INSTANT,
+                    required_capabilities=[ModelCapability.CHAT],
+                    summary="Fast-path simple factual lookup",
+                )
+
+        # 6. Concise clause on general prompt without analytical intent
+        if re.search(self._concise_answer_clause, prompt_clean):
+            return TaskIntent(
+                category="CONVERSATIONAL",
+                confidence=0.90,
+                reasoning_depth=ReasoningDepth.INSTANT,
+                required_capabilities=[ModelCapability.CHAT],
+                summary="Fast-path concise query",
+            )
+
+        # 7. Default to standard reasoning
         return TaskIntent(
             category="GENERAL_QUERY",
             confidence=0.85,

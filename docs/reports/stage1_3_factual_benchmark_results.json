@@ -1,0 +1,322 @@
+{
+  "factual_plain_japan": {
+    "prompt": "What is the capital of Japan?",
+    "category": "CONVERSATIONAL",
+    "depth": "instant",
+    "ui_ttft_median_ms": 89.40112499112729,
+    "total_median_s": 0.18547970899089705,
+    "ans_tokens_median": 2,
+    "cot_tokens_median": 0,
+    "correct": true,
+    "sample_output": "Tokyo",
+    "runs": [
+      {
+        "iteration": 1,
+        "ui_ttft_ms": 330.4176249948796,
+        "total_s": 0.4268996249884367,
+        "ans_tokens": 2,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "Tokyo"
+      },
+      {
+        "iteration": 2,
+        "ui_ttft_ms": 89.40112499112729,
+        "total_s": 0.18547970899089705,
+        "ans_tokens": 2,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "Tokyo"
+      },
+      {
+        "iteration": 3,
+        "ui_ttft_ms": 88.78350000304636,
+        "total_s": 0.1845355830009794,
+        "ans_tokens": 2,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "Tokyo"
+      }
+    ]
+  },
+  "factual_plain_python": {
+    "prompt": "Who developed Python?",
+    "category": "CONVERSATIONAL",
+    "depth": "instant",
+    "ui_ttft_median_ms": 92.7218750002794,
+    "total_median_s": 0.5123195420019329,
+    "ans_tokens_median": 9,
+    "cot_tokens_median": 0,
+    "correct": true,
+    "sample_output": "Python was created by Guido van Rossum.",
+    "runs": [
+      {
+        "iteration": 1,
+        "ui_ttft_ms": 311.0139159980463,
+        "total_s": 0.7289892080007121,
+        "ans_tokens": 9,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "Python was created by Guido van Rossum."
+      },
+      {
+        "iteration": 2,
+        "ui_ttft_ms": 90.51708299375605,
+        "total_s": 0.5123195420019329,
+        "ans_tokens": 9,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "Python was created by Guido van Rossum."
+      },
+      {
+        "iteration": 3,
+        "ui_ttft_ms": 92.7218750002794,
+        "total_s": 0.4647233340074308,
+        "ans_tokens": 8,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "Guido van Rossum developed Python."
+      }
+    ]
+  },
+  "factual_plain_water": {
+    "prompt": "What is the boiling point of water?",
+    "category": "CONVERSATIONAL",
+    "depth": "instant",
+    "ui_ttft_median_ms": 97.09962499618996,
+    "total_median_s": 1.245701541993185,
+    "ans_tokens_median": 24,
+    "cot_tokens_median": 0,
+    "correct": true,
+    "sample_output": "At standard atmospheric pressure (1 atm), the boiling point of water is 100\u00b0C (212\u00b0F).",
+    "runs": [
+      {
+        "iteration": 1,
+        "ui_ttft_ms": 316.2467919901246,
+        "total_s": 1.46504612499848,
+        "ans_tokens": 24,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "At standard atmospheric pressure (1 atm), the boiling point of water is 100\u00b0C (212\u00b0F)."
+      },
+      {
+        "iteration": 2,
+        "ui_ttft_ms": 97.09962499618996,
+        "total_s": 1.0638047919928795,
+        "ans_tokens": 20,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "At sea level (1 atmosphere), water boils at 100\u00b0C (212\u00b0F)."
+      },
+      {
+        "iteration": 3,
+        "ui_ttft_ms": 95.87883298809174,
+        "total_s": 1.245701541993185,
+        "ans_tokens": 24,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "At standard atmospheric pressure (1 atm), the boiling point of water is 100\u00b0C (212\u00b0F)."
+      }
+    ]
+  },
+  "factual_plain_everest": {
+    "prompt": "Where is Mount Everest?",
+    "category": "CONVERSATIONAL",
+    "depth": "instant",
+    "ui_ttft_median_ms": 97.16150000167545,
+    "total_median_s": 1.0650633340119384,
+    "ans_tokens_median": 21,
+    "cot_tokens_median": 0,
+    "correct": true,
+    "sample_output": "Mount Everest is located in the Himalayas, on the border between Nepal and China (Tibet).",
+    "runs": [
+      {
+        "iteration": 1,
+        "ui_ttft_ms": 327.2967079974478,
+        "total_s": 1.2948437919985736,
+        "ans_tokens": 21,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "Mount Everest is located in the Himalayas, on the border between Nepal and China (Tibet)."
+      },
+      {
+        "iteration": 2,
+        "ui_ttft_ms": 94.81345899985172,
+        "total_s": 1.0643143340130337,
+        "ans_tokens": 21,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "Mount Everest is located in the Himalayas, on the border between Nepal and China (Tibet)."
+      },
+      {
+        "iteration": 3,
+        "ui_ttft_ms": 97.16150000167545,
+        "total_s": 1.0650633340119384,
+        "ans_tokens": 21,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "Mount Everest is located in the Himalayas, on the border between Nepal and China (Tibet)."
+      }
+    ]
+  },
+  "factual_concise_japan": {
+    "prompt": "What is the capital of Japan? Answer in one word.",
+    "category": "CONVERSATIONAL",
+    "depth": "instant",
+    "ui_ttft_median_ms": 95.79825001128484,
+    "total_median_s": 0.1925711250078166,
+    "ans_tokens_median": 2,
+    "cot_tokens_median": 0,
+    "correct": true,
+    "sample_output": "Tokyo",
+    "runs": [
+      {
+        "iteration": 1,
+        "ui_ttft_ms": 311.01220900018234,
+        "total_s": 0.40588204200321343,
+        "ans_tokens": 2,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "Tokyo"
+      },
+      {
+        "iteration": 2,
+        "ui_ttft_ms": 95.79825001128484,
+        "total_s": 0.19084191700676456,
+        "ans_tokens": 2,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "Tokyo"
+      },
+      {
+        "iteration": 3,
+        "ui_ttft_ms": 93.42674999788869,
+        "total_s": 0.1925711250078166,
+        "ans_tokens": 2,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "Tokyo"
+      }
+    ]
+  },
+  "arithmetic_spaced": {
+    "prompt": "What is 37 + 58?",
+    "category": "CONVERSATIONAL",
+    "depth": "instant",
+    "ui_ttft_median_ms": 90.6294589949539,
+    "total_median_s": 0.18595708400243893,
+    "ans_tokens_median": 2,
+    "cot_tokens_median": 0,
+    "correct": true,
+    "sample_output": "95",
+    "runs": [
+      {
+        "iteration": 1,
+        "ui_ttft_ms": 313.87750001158565,
+        "total_s": 0.4096999580069678,
+        "ans_tokens": 2,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "95"
+      },
+      {
+        "iteration": 2,
+        "ui_ttft_ms": 90.6294589949539,
+        "total_s": 0.18595708400243893,
+        "ans_tokens": 2,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "95"
+      },
+      {
+        "iteration": 3,
+        "ui_ttft_ms": 90.04633300355636,
+        "total_s": 0.18440254199958872,
+        "ans_tokens": 2,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "95"
+      }
+    ]
+  },
+  "analytical_explain_python": {
+    "prompt": "Explain why Python is interpreted.",
+    "category": "GENERAL_QUERY",
+    "depth": "standard",
+    "ui_ttft_median_ms": 58137.16495799599,
+    "total_median_s": 79.87174724999932,
+    "ans_tokens_median": 250,
+    "cot_tokens_median": 1106,
+    "correct": true,
+    "sample_output": "Python is technically interpreted primarily to prioritize developer productivity, portability, and dynamic runtime behavior. While the standard Python implementation (CPython) does compile source code into an intermediate bytecode format, it executes this bytecode directly via a virtual machine rather than linking it into a static native binary for a specific operating system.\n\nThis architecture offers several key advantages:\n1.  **Rapid Development:** Changes to code can be tested immediately without a separate compilation and linking step.\n2.  **Portability:** The same script runs on any supported platform (Windows, macOS, Linux) because the interpreter handles the runtime environment.\n3.  **Dynamic Features:** It supports dynamic typing and late binding, allowing variables to change types and behaviors during execution without recompilation.",
+    "runs": [
+      {
+        "iteration": 1,
+        "ui_ttft_ms": 58137.16495799599,
+        "total_s": 65.33955858300033,
+        "ans_tokens": 146,
+        "cot_tokens": 1106,
+        "correct": true,
+        "answer": "Python is technically interpreted primarily to prioritize developer productivity, portability, and dynamic runtime behavior. While the standard Python implementation (CPython) does compile source code into an intermediate bytecode format, it executes this bytecode directly via a virtual machine rather than linking it into a static native binary for a specific operating system.\n\nThis architecture offers several key advantages:\n1.  **Rapid Development:** Changes to code can be tested immediately without a separate compilation and linking step.\n2.  **Portability:** The same script runs on any supported platform (Windows, macOS, Linux) because the interpreter handles the runtime environment.\n3.  **Dynamic Features:** It supports dynamic typing and late binding, allowing variables to change types and behaviors during execution without recompilation."
+      },
+      {
+        "iteration": 2,
+        "ui_ttft_ms": 65565.67037499917,
+        "total_s": 79.87174724999932,
+        "ans_tokens": 250,
+        "cot_tokens": 1172,
+        "correct": true,
+        "answer": "Python is categorized as an interpreted language because its source code is not directly compiled into native machine instructions for a specific processor before execution. Instead, it runs through an interpreter\u2014a virtual machine that translates and executes the code.\n\nHere are the primary reasons for this design:\n\n1.  **Portability:** Because Python compiles high-level source code into platform-independent bytecode (`.pyc`) rather than native machine code, the same script can run on any operating system (Windows, macOS, Linux) without recompilation.\n2.  **Development Efficiency:** The interpreted nature allows for rapid iteration. Developers do not need to compile and link programs after every change, which speeds up coding and debugging cycles.\n3.  **Dynamic Flexibility:** An interpreter enables runtime introspection and code modification. Features like dynamic typing and the ability to modify data structures at runtime require a flexible execution environment that interpretation provides.\n\n**Note on Execution Model:**\nIt is important to clarify that Python uses a hybrid approach. When you run a script, the compiler step converts `.py` files into bytecode (`.pyc`). This bytecode is then executed by the CPython Virtual Machine line-by-line. While this happens in two steps rather than one, the final execution layer remains an interpreter executing bytecode dynamically."
+      },
+      {
+        "iteration": 3,
+        "ui_ttft_ms": 55572.93200001004,
+        "total_s": 81.08808679200592,
+        "ans_tokens": 410,
+        "cot_tokens": 941,
+        "correct": true,
+        "answer": "Python is considered an **interpreted language**, though modern implementations use a hybrid approach for efficiency. Here's why this design choice exists:\n\n### 1. **Execution Model**  \n   - Python source code (`.py` files) is first **compiled to bytecode** (binary instructions stored in `.pyc` files). This bytecode is then executed by the **Python Virtual Machine (VM)**, which interprets the bytecode into machine-specific instructions at runtime.  \n   - Unlike compiled languages (e.g., C/C++), Python does not generate a standalone native binary executable by default. Instead, it relies on the interpreter to process code dynamically during execution.\n\n### 2. **Reasons for Interpretation**  \n   - **Rapid Development**: Interpreters allow immediate feedback when writing/debugging code, without needing full recompilation. Errors are reported line-by-line, not as a failed binary build.  \n   - **Dynamic Flexibility**: Python supports runtime features like dynamic typing, modifying modules during execution, and metaprogramming (e.g., `eval()`, decorators). These rely on the interpreter's ability to adapt behavior dynamically.  \n   - **Portability**: The same bytecode can run across platforms as long as a compatible Python VM exists, avoiding platform-specific native binaries.  \n   - **Embeddability**: Interpreted languages are easier to embed in other applications (e.g., GUI tools, games) without redistributing compiled libraries.  \n\n### 3. **Performance Trade-Off**  \n   While bytecode compilation speeds up repeated execution of the same code, pure interpretation would be slower. Python prioritizes **developer productivity** and **flexibility** over raw speed, making it ideal for scripting, data analysis, prototyping, and interactive tasks. Tools like PyPy (a JIT compiler) or Nuitka further optimize performance if needed.\n\n### Key Takeaway  \nPython's \"interpretation\" isn't purely line-by-line execution but a balance between compilation (for caching bytecode) and interpretation (via the VM). This hybrid model maximizes development speed, adaptability, and ease of use while still enabling performance optimizations where critical."
+      }
+    ]
+  },
+  "complex_dijkstra": {
+    "prompt": "What is Dijkstra's algorithm?",
+    "category": "GENERAL_QUERY",
+    "depth": "standard",
+    "ui_ttft_median_ms": 6080.557041990687,
+    "total_median_s": 33.644107959000394,
+    "ans_tokens_median": 231,
+    "cot_tokens_median": 96,
+    "correct": true,
+    "sample_output": "Dijkstra's algorithm is a graph search algorithm that finds the shortest path between nodes in a weighted graph from a single source node to all other reachable nodes.\n\n**Key Characteristics:**\n*   **Goal:** Calculates the minimum distance (weight) required to reach every node from the start node.\n*   **Mechanism:** It uses a priority queue (min-heap) to always select and process the unvisited node with the smallest known distance next.\n*   **Constraint:** It only works correctly if all edge weights in the graph are non-negative. If negative weights exist, algorithms like Bellman-Ford should be used instead.\n*   **Complexity:** Typically runs in $O(E + V \\log V)$ using a Fibonacci heap, or $O(V^2)$ with a simple array implementation.\n\n**Common Applications:**\n*   GPS navigation systems (routing maps).\n*   Network routing protocols (e.g., OSPF).\n*   Telecommunications and internet traffic optimization.",
+    "runs": [
+      {
+        "iteration": 1,
+        "ui_ttft_ms": 58730.36016699916,
+        "total_s": 70.9975134999986,
+        "ans_tokens": 188,
+        "cot_tokens": 839,
+        "correct": true,
+        "answer": "Dijkstra's algorithm is a graph search algorithm that finds the shortest path between nodes in a weighted graph from a single source node to all other reachable nodes.\n\n**Key Characteristics:**\n*   **Goal:** Calculates the minimum distance (weight) required to reach every node from the start node.\n*   **Mechanism:** It uses a priority queue (min-heap) to always select and process the unvisited node with the smallest known distance next.\n*   **Constraint:** It only works correctly if all edge weights in the graph are non-negative. If negative weights exist, algorithms like Bellman-Ford should be used instead.\n*   **Complexity:** Typically runs in $O(E + V \\log V)$ using a Fibonacci heap, or $O(V^2)$ with a simple array implementation.\n\n**Common Applications:**\n*   GPS navigation systems (routing maps).\n*   Network routing protocols (e.g., OSPF).\n*   Telecommunications and internet traffic optimization."
+      },
+      {
+        "iteration": 2,
+        "ui_ttft_ms": 6080.557041990687,
+        "total_s": 33.644107959000394,
+        "ans_tokens": 396,
+        "cot_tokens": 96,
+        "correct": true,
+        "answer": "**Dijkstra's Algorithm**\n\nDijkstra's algorithm is a **graph search algorithm** used to find the shortest paths between nodes in a graph. It was developed by Dutch computer scientist Edsger W. Dijkstra in 1956.\n\n### What It Does\n- Finds the shortest path from a **source node** to all other reachable nodes in a weighted graph\n- Works with graphs that have **non-negative edge weights** only\n\n### How It Works (Basic Idea)\n1. **Initialize**: Set distance to source as 0, all others as infinity\n2. **Priority Queue**: Use a priority queue/min-heap to explore the nearest unvisited node first\n3. **Greedy Approach**: Always visit the node with the smallest known distance\n4. **Relaxation**: Update neighbors' distances if a shorter path is found\n5. **Termination**: Stop when all reachable nodes have been visited\n\n### Key Points\n| Aspect | Details |\n|--------|---------|\n| **Time Complexity** | O((V + E) log V) with heap, O(V\u00b2) without |\n| **Space Complexity** | O(V) for distance array |\n| **Use Cases** | GPS navigation, network routing, pathfinding |\n\n### Python Implementation (Simplified)\n```python\nimport heapq\n\ndef dijkstra(graph, start):\n    distances = {node: float('inf') for node in graph}\n    distances[start] = 0\n    pq = [(0, start)]\n    \n    while pq:\n        current_dist, current_node = heapq.heappop(pq)\n        \n        if current_dist > distances[current_node]:\n            continue\n        \n        for neighbor, weight in graph[current_node].items():\n            distance = current_dist + weight\n            if distance < distances[neighbor]:\n                distances[neighbor] = distance\n                heapq.heappush(pq, (distance, neighbor))\n    \n    return distances\n```\n\n**Note**: It cannot handle graphs with negative edge weights\u2014use the Bellman-Ford algorithm in that case.\n\nNeed help implementing this for a specific use case? Just let me know! \ud83d\ude80"
+      },
+      {
+        "iteration": 3,
+        "ui_ttft_ms": 5356.704792007804,
+        "total_s": 20.945046625012765,
+        "ans_tokens": 231,
+        "cot_tokens": 81,
+        "correct": true,
+        "answer": "**Dijkstra's algorithm** is a classic pathfinding algorithm used to find the shortest path between nodes in a weighted graph. Here are the key details:\n\n### How it Works\n1.  Assign infinity as the distance to all nodes except the start node (which gets a distance of 0).\n2.  Use a priority queue to select the unvisited node with the smallest tentative distance.\n3.  For each neighbor of the selected node, calculate a new possible distance through it. Update if the new distance is shorter.\n4.  Mark the selected node as visited and repeat until all nodes are processed or the destination is reached.\n\n### Key Properties\n-   **Time Complexity:** O((V + E) log V) with a binary heap, or O(V\u00b2) with an array\n-   **Space Complexity:** O(V + E)\n-   **Requirement:** All edge weights must be non-negative\n\n### Where It's Used\n-   GPS navigation (routing shortest paths)\n-   Network routing protocols\n-   Pathfinding in games and robotics\n-   Map services and logistics\n\nIt was developed by Edsger W. Dijkstra in 1956 and remains a foundational algorithm in computer science for weighted graph problems."
+      }
+    ]
+  }
+}

@@ -1,9 +1,13 @@
 import SwiftUI
+import AppKit
 
 public struct ContentView: View {
-    @StateObject private var client = CarbonClient()
+    @ObservedObject var client: CarbonClient
+    @FocusState private var isInputFocused: Bool
 
-    public init() {}
+    public init(client: CarbonClient) {
+        self.client = client
+    }
 
     public var body: some View {
         VStack(spacing: 0) {
@@ -34,6 +38,11 @@ public struct ContentView: View {
                         }
                     }
                 }
+                .onChange(of: client.isGenerating) { _, isGen in
+                    if !isGen {
+                        isInputFocused = true
+                    }
+                }
             }
 
             Divider()
@@ -43,6 +52,17 @@ public struct ContentView: View {
         }
         .frame(minWidth: 640, minHeight: 480)
         .background(Color(NSColor.windowBackgroundColor))
+        .onAppear {
+            isInputFocused = true
+            NSApp.activate(ignoringOtherApps: true)
+            DispatchQueue.main.async {
+                (NSApp.keyWindow ?? NSApp.windows.first)?.makeKeyAndOrderFront(nil)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            isInputFocused = true
+        }
+
     }
 
     private var headerView: some View {
@@ -82,11 +102,11 @@ public struct ContentView: View {
             // Connection Status Pill
             HStack(spacing: 4) {
                 Circle()
-                    .fill(client.isConnected ? Color.green : Color.red)
+                    .fill(statusColor)
                     .frame(width: 8, height: 8)
-                Text(client.isConnected ? "LOCAL" : "OFFLINE")
+                Text(client.connectionStatus.rawValue)
                     .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(client.isConnected ? .green : .red)
+                    .foregroundColor(statusColor)
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
@@ -95,6 +115,16 @@ public struct ContentView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+    }
+
+    private var statusColor: Color {
+        if client.isConnected {
+            return Color.green
+        } else if client.isHealthOk {
+            return Color.orange
+        } else {
+            return Color.red
+        }
     }
 
     private var emptyStateView: some View {
@@ -119,6 +149,7 @@ public struct ContentView: View {
             TextField("Ask Carbon anything or give a task...", text: $client.inputText)
                 .textFieldStyle(.plain)
                 .font(.system(size: 14))
+                .focused($isInputFocused)
                 .padding(10)
                 .background(Color(NSColor.controlBackgroundColor))
                 .cornerRadius(8)
@@ -129,6 +160,7 @@ public struct ContentView: View {
             if client.isGenerating {
                 Button(action: {
                     client.cancelCurrentTask()
+                    isInputFocused = true
                 }) {
                     Image(systemName: "stop.fill")
                         .foregroundColor(.red)
@@ -157,6 +189,7 @@ public struct ContentView: View {
         guard !text.isEmpty else { return }
         client.inputText = ""
         client.sendMessage(text)
+        isInputFocused = true
     }
 }
 
@@ -196,7 +229,7 @@ public struct MessageBubbleView: View {
                         .cornerRadius(8)
                     }
 
-                    // 2. Processing / Progress indicator (Direct instruction: no raw reasoning display)
+                    // 2. Processing / Progress indicator (Directive 2: no raw reasoning display)
                     if message.text.isEmpty && (message.isProcessing || message.isStreaming) && message.errorMessage == nil && !message.isCancelled {
                         HStack(spacing: 8) {
                             ProgressView()

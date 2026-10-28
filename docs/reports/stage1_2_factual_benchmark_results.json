@@ -1,0 +1,202 @@
+{
+  "factual_plain_japan": {
+    "prompt": "What is the capital of Japan?",
+    "category": "GENERAL_QUERY",
+    "depth": "standard",
+    "ui_ttft_median_ms": 13814.847916000872,
+    "total_median_s": 14.140777541004354,
+    "ans_tokens_median": 7,
+    "cot_tokens_median": 272,
+    "correct": true,
+    "sample_output": "The capital of Japan is Tokyo.",
+    "runs": [
+      {
+        "iteration": 1,
+        "ui_ttft_ms": 13814.847916000872,
+        "total_s": 14.140777541004354,
+        "ans_tokens": 7,
+        "cot_tokens": 272,
+        "correct": true,
+        "answer": "The capital of Japan is Tokyo."
+      },
+      {
+        "iteration": 2,
+        "ui_ttft_ms": 3001.9130000000587,
+        "total_s": 3.4273303750087507,
+        "ans_tokens": 9,
+        "cot_tokens": 60,
+        "correct": true,
+        "answer": "The capital of Japan is **Tokyo**."
+      },
+      {
+        "iteration": 3,
+        "ui_ttft_ms": 17326.66395799606,
+        "total_s": 17.654909042001236,
+        "ans_tokens": 7,
+        "cot_tokens": 336,
+        "correct": true,
+        "answer": "The capital of Japan is Tokyo."
+      }
+    ]
+  },
+  "factual_concise_japan": {
+    "prompt": "What is the capital of Japan? Answer in one word.",
+    "category": "CONVERSATIONAL",
+    "depth": "instant",
+    "ui_ttft_median_ms": 90.54833299887832,
+    "total_median_s": 0.18723112500447314,
+    "ans_tokens_median": 2,
+    "cot_tokens_median": 0,
+    "correct": true,
+    "sample_output": "Tokyo",
+    "runs": [
+      {
+        "iteration": 1,
+        "ui_ttft_ms": 337.3218749911757,
+        "total_s": 0.4337914999923669,
+        "ans_tokens": 2,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "Tokyo"
+      },
+      {
+        "iteration": 2,
+        "ui_ttft_ms": 89.41058300842997,
+        "total_s": 0.18570525001268834,
+        "ans_tokens": 2,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "Tokyo"
+      },
+      {
+        "iteration": 3,
+        "ui_ttft_ms": 90.54833299887832,
+        "total_s": 0.18723112500447314,
+        "ans_tokens": 2,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "Tokyo"
+      }
+    ]
+  },
+  "arithmetic_spaced": {
+    "prompt": "What is 37 + 58?",
+    "category": "CONVERSATIONAL",
+    "depth": "instant",
+    "ui_ttft_median_ms": 90.18170800118241,
+    "total_median_s": 0.18649399999412708,
+    "ans_tokens_median": 2,
+    "cot_tokens_median": 0,
+    "correct": true,
+    "sample_output": "95",
+    "runs": [
+      {
+        "iteration": 1,
+        "ui_ttft_ms": 317.33175000408664,
+        "total_s": 0.41380258300341666,
+        "ans_tokens": 2,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "95"
+      },
+      {
+        "iteration": 2,
+        "ui_ttft_ms": 90.13970800151583,
+        "total_s": 0.18649399999412708,
+        "ans_tokens": 2,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "95"
+      },
+      {
+        "iteration": 3,
+        "ui_ttft_ms": 90.18170800118241,
+        "total_s": 0.18625195800268557,
+        "ans_tokens": 2,
+        "cot_tokens": 0,
+        "correct": true,
+        "answer": "95"
+      }
+    ]
+  },
+  "factual_plain_python": {
+    "prompt": "Who developed Python?",
+    "category": "GENERAL_QUERY",
+    "depth": "standard",
+    "ui_ttft_median_ms": 20825.596832990414,
+    "total_median_s": 23.40272229099355,
+    "ans_tokens_median": 52,
+    "cot_tokens_median": 405,
+    "correct": true,
+    "sample_output": "Python was developed by **Guido van Rossum**, who created it in the late 1980s as an open-source programming language focused on readability and simplicity. The first public release of Python occurred in February 1991. Van Rossum led its early development before stepping down as its lead maintainer in 2018, transitioning leadership to others under the guidance of the **Python Software Foundation (PSF)**.",
+    "runs": [
+      {
+        "iteration": 1,
+        "ui_ttft_ms": 6514.387916991836,
+        "total_s": 10.642051167000318,
+        "ans_tokens": 86,
+        "cot_tokens": 129,
+        "correct": true,
+        "answer": "Python was developed by **Guido van Rossum**, who created it in the late 1980s as an open-source programming language focused on readability and simplicity. The first public release of Python occurred in February 1991. Van Rossum led its early development before stepping down as its lead maintainer in 2018, transitioning leadership to others under the guidance of the **Python Software Foundation (PSF)**."
+      },
+      {
+        "iteration": 2,
+        "ui_ttft_ms": 32210.13683300407,
+        "total_s": 34.27112329201191,
+        "ans_tokens": 42,
+        "cot_tokens": 630,
+        "correct": true,
+        "answer": "Python was developed by **Guido van Rossum**. He designed the language at CWI in the Netherlands, beginning in late 1989, with the first release occurring in February 1991."
+      },
+      {
+        "iteration": 3,
+        "ui_ttft_ms": 20825.596832990414,
+        "total_s": 23.40272229099355,
+        "ans_tokens": 52,
+        "cot_tokens": 405,
+        "correct": true,
+        "answer": "Python was developed by **Guido van Rossum**. He began working on it in December 1989 while employed at Centrum Wiskunde & Informatica (CWI) in Amsterdam, with the first public release occurring in February 1991."
+      }
+    ]
+  },
+  "factual_plain_water": {
+    "prompt": "What is the boiling point of water?",
+    "category": "GENERAL_QUERY",
+    "depth": "standard",
+    "ui_ttft_median_ms": 18223.791374999564,
+    "total_median_s": 19.35830087499926,
+    "ans_tokens_median": 23,
+    "cot_tokens_median": 318,
+    "correct": true,
+    "sample_output": "At standard atmospheric pressure (sea level), the boiling point of pure water is **100\u00b0C (212\u00b0F)**.",
+    "runs": [
+      {
+        "iteration": 1,
+        "ui_ttft_ms": 15013.178707988118,
+        "total_s": 16.25555879098829,
+        "ans_tokens": 26,
+        "cot_tokens": 280,
+        "correct": true,
+        "answer": "At standard atmospheric pressure (sea level), the boiling point of pure water is **100\u00b0C (212\u00b0F)**."
+      },
+      {
+        "iteration": 2,
+        "ui_ttft_ms": 18223.791374999564,
+        "total_s": 19.35830087499926,
+        "ans_tokens": 23,
+        "cot_tokens": 318,
+        "correct": true,
+        "answer": "At standard atmospheric pressure (sea level), water boils at **100\u00b0C** (212\u00b0F)."
+      },
+      {
+        "iteration": 3,
+        "ui_ttft_ms": 20895.790167007362,
+        "total_s": 22.076223416996072,
+        "ans_tokens": 22,
+        "cot_tokens": 359,
+        "correct": true,
+        "answer": "At standard atmospheric pressure (sea level), water boils at **100\u00b0C (212\u00b0F)**."
+      }
+    ]
+  }
+}
