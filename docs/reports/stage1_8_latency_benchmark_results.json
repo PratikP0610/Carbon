@@ -1,0 +1,863 @@
+{
+  "metadata": {
+    "report_type": "PARTIAL STAGE 1.8 AUDIT (Gracefully halted after E.3)",
+    "hardware": "Apple MacBook Air M5, 16GB Unified Memory",
+    "os": "macOS 27.0.1",
+    "model": "qwen3.5:9b Q4_K_M",
+    "context_length": 4096,
+    "inference_mode_requested": "standard",
+    "think_setting": true,
+    "num_predict": 2560,
+    "temperature": 0.6,
+    "total_completed_runs": 23,
+    "warmup_run": {
+      "total_duration": 42.412,
+      "ttft": 39.276
+    }
+  },
+  "category_summaries": {
+    "A. Simple factual": {
+      "sample_size": 5,
+      "is_complete": true,
+      "total_duration": {
+        "median": 27.55,
+        "p95": 115.11,
+        "min": 15.53,
+        "max": 134.73
+      },
+      "ttft": {
+        "median": 24.93,
+        "p95": 111.38,
+        "min": 11.76,
+        "max": 130.21
+      },
+      "thinking_duration": {
+        "median": 24.45,
+        "p95": 110.78,
+        "min": 11.32,
+        "max": 129.57
+      },
+      "visible_duration": {
+        "median": 2.55,
+        "p95": 4.29,
+        "min": 0.47,
+        "max": 4.43
+      },
+      "thinking_tokens": {
+        "median": 438,
+        "min": 221,
+        "max": 2799
+      },
+      "visible_tokens": {
+        "median": 53,
+        "min": 10,
+        "max": 86
+      },
+      "thinking_tps": {
+        "median": 17.92
+      },
+      "visible_tps": {
+        "median": 20.8
+      }
+    },
+    "B. Short explanation": {
+      "sample_size": 5,
+      "is_complete": true,
+      "total_duration": {
+        "median": 198.28,
+        "p95": 202.5,
+        "min": 185.69,
+        "max": 203.12
+      },
+      "ttft": {
+        "median": 198.27,
+        "p95": 202.5,
+        "min": 185.69,
+        "max": 203.11
+      },
+      "thinking_duration": {
+        "median": 198.04,
+        "p95": 202.15,
+        "min": 184.96,
+        "max": 202.74
+      },
+      "visible_duration": {
+        "median": 0.0,
+        "p95": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "thinking_tokens": {
+        "median": 2393,
+        "min": 1943,
+        "max": 2868
+      },
+      "visible_tokens": {
+        "median": 24,
+        "min": 24,
+        "max": 24
+      },
+      "thinking_tps": {
+        "median": 11.8
+      },
+      "visible_tps": {
+        "median": 0.0
+      }
+    },
+    "C. Structured explanation": {
+      "sample_size": 5,
+      "is_complete": true,
+      "total_duration": {
+        "median": 113.04,
+        "p95": 155.1,
+        "min": 87.96,
+        "max": 161.43
+      },
+      "ttft": {
+        "median": 97.18,
+        "p95": 136.9,
+        "min": 72.46,
+        "max": 142.18
+      },
+      "thinking_duration": {
+        "median": 96.61,
+        "p95": 135.92,
+        "min": 71.91,
+        "max": 141.09
+      },
+      "visible_duration": {
+        "median": 15.77,
+        "p95": 20.28,
+        "min": 13.87,
+        "max": 20.56
+      },
+      "thinking_tokens": {
+        "median": 1240,
+        "min": 946,
+        "max": 1921
+      },
+      "visible_tokens": {
+        "median": 234,
+        "min": 184,
+        "max": 283
+      },
+      "thinking_tps": {
+        "median": 13.16
+      },
+      "visible_tps": {
+        "median": 13.76
+      }
+    },
+    "D. Coding": {
+      "sample_size": 5,
+      "is_complete": true,
+      "total_duration": {
+        "median": 89.64,
+        "p95": 170.52,
+        "min": 70.17,
+        "max": 189.59
+      },
+      "ttft": {
+        "median": 32.59,
+        "p95": 160.21,
+        "min": 17.27,
+        "max": 189.59
+      },
+      "thinking_duration": {
+        "median": 32.08,
+        "p95": 159.86,
+        "min": 16.21,
+        "max": 189.29
+      },
+      "visible_duration": {
+        "median": 52.81,
+        "p95": 60.88,
+        "min": 0.0,
+        "max": 61.53
+      },
+      "thinking_tokens": {
+        "median": 486,
+        "min": 241,
+        "max": 2632
+      },
+      "visible_tokens": {
+        "median": 731,
+        "min": 24,
+        "max": 909
+      },
+      "thinking_tps": {
+        "median": 14.87
+      },
+      "visible_tps": {
+        "median": 14.47
+      }
+    },
+    "E. Analytical": {
+      "sample_size": 3,
+      "is_complete": false,
+      "total_duration": {
+        "median": 180.74,
+        "p95": null,
+        "min": 123.92,
+        "max": 216.89
+      },
+      "ttft": {
+        "median": 130.6,
+        "p95": null,
+        "min": 91.47,
+        "max": 187.28
+      },
+      "thinking_duration": {
+        "median": 130.13,
+        "p95": null,
+        "min": 90.5,
+        "max": 186.62
+      },
+      "visible_duration": {
+        "median": 32.38,
+        "p95": null,
+        "min": 29.57,
+        "max": 50.11
+      },
+      "thinking_tokens": {
+        "median": 1538,
+        "min": 1209,
+        "max": 1984
+      },
+      "visible_tokens": {
+        "median": 556,
+        "min": 320,
+        "max": 668
+      },
+      "thinking_tps": {
+        "median": 11.82
+      },
+      "visible_tps": {
+        "median": 11.1
+      }
+    }
+  },
+  "raw_observations": [
+    {
+      "category": "A. Simple factual",
+      "prompt": "What does RAM stand for?",
+      "iteration": 1,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 134.734,
+        "ttft": 130.212,
+        "thinking_duration": 129.568,
+        "visible_duration": 4.435
+      },
+      "tokens": {
+        "thinking_tokens": 2799,
+        "visible_tokens": 86,
+        "total_tokens": 2885
+      },
+      "throughput": {
+        "thinking_tps": 21.6,
+        "visible_tps": 19.39
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "A. Simple factual",
+      "prompt": "What does RAM stand for?",
+      "iteration": 2,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 36.614,
+        "ttft": 36.07,
+        "thinking_duration": 35.626,
+        "visible_duration": 0.472
+      },
+      "tokens": {
+        "thinking_tokens": 600,
+        "visible_tokens": 10,
+        "total_tokens": 610
+      },
+      "throughput": {
+        "thinking_tps": 16.84,
+        "visible_tps": 21.18
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "A. Simple factual",
+      "prompt": "What does RAM stand for?",
+      "iteration": 3,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 15.527,
+        "ttft": 11.761,
+        "thinking_duration": 11.319,
+        "visible_duration": 3.695
+      },
+      "tokens": {
+        "thinking_tokens": 221,
+        "visible_tokens": 84,
+        "total_tokens": 305
+      },
+      "throughput": {
+        "thinking_tps": 19.53,
+        "visible_tps": 22.74
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "A. Simple factual",
+      "prompt": "What does RAM stand for?",
+      "iteration": 4,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 27.551,
+        "ttft": 24.929,
+        "thinking_duration": 24.445,
+        "visible_duration": 2.548
+      },
+      "tokens": {
+        "thinking_tokens": 438,
+        "visible_tokens": 53,
+        "total_tokens": 491
+      },
+      "throughput": {
+        "thinking_tps": 17.92,
+        "visible_tps": 20.8
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "A. Simple factual",
+      "prompt": "What does RAM stand for?",
+      "iteration": 5,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 22.272,
+        "ttft": 19.713,
+        "thinking_duration": 19.204,
+        "visible_duration": 2.463
+      },
+      "tokens": {
+        "thinking_tokens": 325,
+        "visible_tokens": 43,
+        "total_tokens": 368
+      },
+      "throughput": {
+        "thinking_tps": 16.92,
+        "visible_tps": 17.46
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "B. Short explanation",
+      "prompt": "Explain what a CPU does in approximately 100 words.",
+      "iteration": 1,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 185.695,
+        "ttft": 185.689,
+        "thinking_duration": 184.963,
+        "visible_duration": 0.0
+      },
+      "tokens": {
+        "thinking_tokens": 1943,
+        "visible_tokens": 24,
+        "total_tokens": 1967
+      },
+      "throughput": {
+        "thinking_tps": 10.5,
+        "visible_tps": 0.0
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "B. Short explanation",
+      "prompt": "Explain what a CPU does in approximately 100 words.",
+      "iteration": 2,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 192.171,
+        "ttft": 192.169,
+        "thinking_duration": 191.736,
+        "visible_duration": 0.0
+      },
+      "tokens": {
+        "thinking_tokens": 2448,
+        "visible_tokens": 24,
+        "total_tokens": 2472
+      },
+      "throughput": {
+        "thinking_tps": 12.77,
+        "visible_tps": 0.0
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "B. Short explanation",
+      "prompt": "Explain what a CPU does in approximately 100 words.",
+      "iteration": 3,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 198.283,
+        "ttft": 198.273,
+        "thinking_duration": 198.041,
+        "visible_duration": 0.0
+      },
+      "tokens": {
+        "thinking_tokens": 2868,
+        "visible_tokens": 24,
+        "total_tokens": 2892
+      },
+      "throughput": {
+        "thinking_tps": 14.48,
+        "visible_tps": 0.0
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "B. Short explanation",
+      "prompt": "Explain what a CPU does in approximately 100 words.",
+      "iteration": 4,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 200.053,
+        "ttft": 200.05,
+        "thinking_duration": 199.786,
+        "visible_duration": 0.0
+      },
+      "tokens": {
+        "thinking_tokens": 2023,
+        "visible_tokens": 24,
+        "total_tokens": 2047
+      },
+      "throughput": {
+        "thinking_tps": 10.13,
+        "visible_tps": 0.0
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "B. Short explanation",
+      "prompt": "Explain what a CPU does in approximately 100 words.",
+      "iteration": 5,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 203.115,
+        "ttft": 203.109,
+        "thinking_duration": 202.742,
+        "visible_duration": 0.0
+      },
+      "tokens": {
+        "thinking_tokens": 2393,
+        "visible_tokens": 24,
+        "total_tokens": 2417
+      },
+      "throughput": {
+        "thinking_tps": 11.8,
+        "visible_tps": 0.0
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "C. Structured explanation",
+      "prompt": "Explain what a CPU does using a heading, a numbered list, a Python code block and one mathematical expression.",
+      "iteration": 1,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 161.427,
+        "ttft": 142.175,
+        "thinking_duration": 141.086,
+        "visible_duration": 19.154
+      },
+      "tokens": {
+        "thinking_tokens": 1921,
+        "visible_tokens": 268,
+        "total_tokens": 2189
+      },
+      "throughput": {
+        "thinking_tps": 13.62,
+        "visible_tps": 13.99
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "C. Structured explanation",
+      "prompt": "Explain what a CPU does using a heading, a numbered list, a Python code block and one mathematical expression.",
+      "iteration": 2,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 87.961,
+        "ttft": 73.137,
+        "thinking_duration": 72.586,
+        "visible_duration": 14.723
+      },
+      "tokens": {
+        "thinking_tokens": 998,
+        "visible_tokens": 234,
+        "total_tokens": 1232
+      },
+      "throughput": {
+        "thinking_tps": 13.75,
+        "visible_tps": 15.89
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "C. Structured explanation",
+      "prompt": "Explain what a CPU does using a heading, a numbered list, a Python code block and one mathematical expression.",
+      "iteration": 3,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 93.123,
+        "ttft": 72.457,
+        "thinking_duration": 71.91,
+        "visible_duration": 20.562
+      },
+      "tokens": {
+        "thinking_tokens": 946,
+        "visible_tokens": 283,
+        "total_tokens": 1229
+      },
+      "throughput": {
+        "thinking_tps": 13.16,
+        "visible_tps": 13.76
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "C. Structured explanation",
+      "prompt": "Explain what a CPU does using a heading, a numbered list, a Python code block and one mathematical expression.",
+      "iteration": 4,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 113.038,
+        "ttft": 97.177,
+        "thinking_duration": 96.614,
+        "visible_duration": 15.765
+      },
+      "tokens": {
+        "thinking_tokens": 1240,
+        "visible_tokens": 217,
+        "total_tokens": 1457
+      },
+      "throughput": {
+        "thinking_tps": 12.83,
+        "visible_tps": 13.76
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "C. Structured explanation",
+      "prompt": "Explain what a CPU does using a heading, a numbered list, a Python code block and one mathematical expression.",
+      "iteration": 5,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 129.778,
+        "ttft": 115.789,
+        "thinking_duration": 115.245,
+        "visible_duration": 13.87
+      },
+      "tokens": {
+        "thinking_tokens": 1387,
+        "visible_tokens": 184,
+        "total_tokens": 1571
+      },
+      "throughput": {
+        "thinking_tps": 12.04,
+        "visible_tps": 13.27
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "D. Coding",
+      "prompt": "Write a Java method to find the second-largest distinct element in an integer array. Explain its time complexity.",
+      "iteration": 1,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 70.169,
+        "ttft": 17.266,
+        "thinking_duration": 16.21,
+        "visible_duration": 52.815
+      },
+      "tokens": {
+        "thinking_tokens": 241,
+        "visible_tokens": 731,
+        "total_tokens": 972
+      },
+      "throughput": {
+        "thinking_tps": 14.87,
+        "visible_tps": 13.84
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "D. Coding",
+      "prompt": "Write a Java method to find the second-largest distinct element in an integer array. Explain its time complexity.",
+      "iteration": 2,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 94.217,
+        "ttft": 32.594,
+        "thinking_duration": 32.077,
+        "visible_duration": 61.533
+      },
+      "tokens": {
+        "thinking_tokens": 486,
+        "visible_tokens": 909,
+        "total_tokens": 1395
+      },
+      "throughput": {
+        "thinking_tps": 15.15,
+        "visible_tps": 14.77
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "D. Coding",
+      "prompt": "Write a Java method to find the second-largest distinct element in an integer array. Explain its time complexity.",
+      "iteration": 3,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 189.59,
+        "ttft": 189.588,
+        "thinking_duration": 189.294,
+        "visible_duration": 0.0
+      },
+      "tokens": {
+        "thinking_tokens": 2632,
+        "visible_tokens": 24,
+        "total_tokens": 2656
+      },
+      "throughput": {
+        "thinking_tps": 13.9,
+        "visible_tps": 0.0
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "D. Coding",
+      "prompt": "Write a Java method to find the second-largest distinct element in an integer array. Explain its time complexity.",
+      "iteration": 4,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 89.635,
+        "ttft": 31.3,
+        "thinking_duration": 30.818,
+        "visible_duration": 58.248
+      },
+      "tokens": {
+        "thinking_tokens": 445,
+        "visible_tokens": 843,
+        "total_tokens": 1288
+      },
+      "throughput": {
+        "thinking_tps": 14.44,
+        "visible_tps": 14.47
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "D. Coding",
+      "prompt": "Write a Java method to find the second-largest distinct element in an integer array. Explain its time complexity.",
+      "iteration": 5,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 85.379,
+        "ttft": 42.684,
+        "thinking_duration": 42.147,
+        "visible_duration": 42.611
+      },
+      "tokens": {
+        "thinking_tokens": 634,
+        "visible_tokens": 643,
+        "total_tokens": 1277
+      },
+      "throughput": {
+        "thinking_tps": 15.04,
+        "visible_tps": 15.09
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "E. Analytical",
+      "prompt": "Explain why binary search requires sorted input and demonstrate what can go wrong when the input is unsorted.",
+      "iteration": 1,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 123.923,
+        "ttft": 91.469,
+        "thinking_duration": 90.503,
+        "visible_duration": 32.384
+      },
+      "tokens": {
+        "thinking_tokens": 1209,
+        "visible_tokens": 668,
+        "total_tokens": 1877
+      },
+      "throughput": {
+        "thinking_tps": 13.36,
+        "visible_tps": 20.63
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "E. Analytical",
+      "prompt": "Explain why binary search requires sorted input and demonstrate what can go wrong when the input is unsorted.",
+      "iteration": 2,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 180.741,
+        "ttft": 130.602,
+        "thinking_duration": 130.134,
+        "visible_duration": 50.11
+      },
+      "tokens": {
+        "thinking_tokens": 1538,
+        "visible_tokens": 556,
+        "total_tokens": 2094
+      },
+      "throughput": {
+        "thinking_tps": 11.82,
+        "visible_tps": 11.1
+      },
+      "status": "COMPLETED"
+    },
+    {
+      "category": "E. Analytical",
+      "prompt": "Explain why binary search requires sorted input and demonstrate what can go wrong when the input is unsorted.",
+      "iteration": 3,
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "think_setting": true,
+      "num_predict": 2560,
+      "temperature": 0.6,
+      "active_context": 4096,
+      "durations": {
+        "total_duration": 216.892,
+        "ttft": 187.279,
+        "thinking_duration": 186.62,
+        "visible_duration": 29.567
+      },
+      "tokens": {
+        "thinking_tokens": 1984,
+        "visible_tokens": 320,
+        "total_tokens": 2304
+      },
+      "throughput": {
+        "thinking_tps": 10.63,
+        "visible_tps": 10.82
+      },
+      "status": "COMPLETED"
+    }
+  ]
+}

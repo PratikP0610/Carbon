@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     )
     primary_model: str = Field(default="qwen3.5:9b", description="Primary approved LLM identifier")
     inference_timeout_seconds: float = Field(
-        default=60.0, description="Inference timeout threshold"
+        default=300.0, description="Inference timeout threshold"
     )
 
     # Persistence & storage

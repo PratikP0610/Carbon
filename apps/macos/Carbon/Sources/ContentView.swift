@@ -92,12 +92,13 @@ public struct ContentView: View {
 
             // Reasoning Depth Picker
             Picker("", selection: $client.reasoningDepth) {
+                Text("Auto").tag("auto")
                 Text("Instant").tag("instant")
                 Text("Standard").tag("standard")
                 Text("Deep").tag("deep")
             }
             .pickerStyle(.segmented)
-            .frame(width: 220)
+            .frame(width: 280)
 
             // Connection Status Pill
             HStack(spacing: 4) {
@@ -229,23 +230,41 @@ public struct MessageBubbleView: View {
                         .cornerRadius(8)
                     }
 
-                    // 2. Processing / Progress indicator (Directive 2: no raw reasoning display)
+                    // 2. Processing / Progress indicator
                     if message.text.isEmpty && (message.isProcessing || message.isStreaming) && message.errorMessage == nil && !message.isCancelled {
                         HStack(spacing: 8) {
                             ProgressView()
                                 .scaleEffect(0.7)
-                            Text("Processing...")
+                            let label: String = {
+                                if let depth = message.executedReasoningDepth {
+                                    return depth == "instant" ? "Responding..." : "Reasoning (\(depth.capitalized))..."
+                                }
+                                return "Processing..."
+                            }()
+                            Text(label)
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(.secondary)
                         }
                         .padding(.vertical, 4)
                     }
 
-                    // 3. Incremental user-visible answer text
+                    // 3. Incremental user-visible answer text with Markdown & Math formatting
                     if !message.text.isEmpty {
-                        Text(message.text)
-                            .font(.system(size: 14))
-                            .textSelection(.enabled)
+                        MarkdownView(text: message.text, isStreaming: message.isStreaming)
+                    }
+
+                    // 4. Executed mode badge
+                    if let depth = message.executedReasoningDepth, !message.text.isEmpty {
+                        HStack(spacing: 4) {
+                            Text(depth.uppercased())
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 1)
+                                .background(Color.secondary.opacity(0.12))
+                                .cornerRadius(3)
+                        }
+                        .padding(.top, 2)
                     }
 
                     // 4. Cancellation state
@@ -264,7 +283,7 @@ public struct MessageBubbleView: View {
                 .padding(.vertical, 10)
                 .background(Color.secondary.opacity(0.1))
                 .cornerRadius(12)
-                .frame(maxWidth: 580, alignment: .leading)
+                .frame(maxWidth: 680, alignment: .leading)
 
                 Spacer()
             }

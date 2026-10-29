@@ -92,7 +92,7 @@ async def test_root_level_think_false_and_options_serialization():
 
 @pytest.mark.asyncio
 async def test_instant_routing_policy(tmp_path):
-    """Verify INSTANT tasks set think=False, num_predict=120, temperature=0.2."""
+    """Verify INSTANT tasks set think=False, num_predict=512, temperature=0.2."""
     settings = Settings(
         data_dir=tmp_path / "data",
         database_path=tmp_path / "data" / "carbon.db",
@@ -119,7 +119,7 @@ async def test_instant_routing_policy(tmp_path):
         assert len(captured_calls) == 1
         call = captured_calls[0]
         assert call["think"] is False
-        assert call["options"] == {"num_predict": 120, "temperature": 0.2}
+        assert call["options"] == {"num_predict": 512, "temperature": 0.2}
         assert task.state == TaskState.COMPLETED
         assert task.result == "4"
 
@@ -128,7 +128,7 @@ async def test_instant_routing_policy(tmp_path):
 
 @pytest.mark.asyncio
 async def test_standard_and_deep_backward_compatibility(tmp_path):
-    """Verify STANDARD and DEEP tasks preserve existing reasoning behaviour without token caps."""
+    """Verify STANDARD and DEEP tasks configure appropriate reasoning budgets and temperatures."""
     settings = Settings(
         data_dir=tmp_path / "data",
         database_path=tmp_path / "data" / "carbon.db",
@@ -147,14 +147,14 @@ async def test_standard_and_deep_backward_compatibility(tmp_path):
         yield {"done": True}
 
     with patch.object(core.provider, "generate_stream_events", side_effect=mock_generate_stream_events):
-        # 1. Standard
+        # 1. Standard (Stage 1.9: think=False with full 2560 token capacity)
         req_std = TaskRequest(prompt="Explain concurrency", reasoning_override=ReasoningDepth.STANDARD)
         task_std = await core.create_task(req_std)
         async for _ in core.execute_task_stream(task_std):
             pass
 
-        assert captured_calls[0]["think"] is True
-        assert captured_calls[0]["options"] is None  # No unvalidated low token cap
+        assert captured_calls[0]["think"] is False
+        assert captured_calls[0]["options"] == {"num_predict": 2560, "temperature": 0.6}
 
         # 2. Deep
         captured_calls.clear()
@@ -164,7 +164,62 @@ async def test_standard_and_deep_backward_compatibility(tmp_path):
             pass
 
         assert captured_calls[0]["think"] is True
-        assert captured_calls[0]["options"] is None  # No unvalidated low token cap
+        assert captured_calls[0]["options"] == {"num_predict": 4096, "temperature": 0.7}
+
+    await core.shutdown()
+
+
+@pytest.mark.asyncio
+async def test_user_reasoning_override_preservation(tmp_path):
+    """Verify explicit user reasoning_override is preserved and not clobbered by intent classifier."""
+    settings = Settings(
+        data_dir=tmp_path / "data",
+        database_path=tmp_path / "data" / "carbon.db",
+        audit_log_path=tmp_path / "data" / "audit.log",
+    )
+    core = CarbonCore(settings=settings)
+    await core.initialize()
+
+    captured_calls = []
+
+    async def mock_generate_stream_events(model_id, prompt, system, think=None, options=None):
+        _ = (prompt, system)
+        captured_calls.append({"model_id": model_id, "think": think, "options": options})
+        yield {"response": "Tokyo", "done": True}
+
+    with patch.object(core.provider, "generate_stream_events", side_effect=mock_generate_stream_events):
+        # User explicitly requested STANDARD on a prompt that would otherwise classify as INSTANT
+        req = TaskRequest(
+            prompt="What is the capital of Japan?",
+            reasoning_override=ReasoningDepth.STANDARD,
+        )
+        task = await core.create_task(req)
+        assert task.reasoning_override == ReasoningDepth.STANDARD
+
+        async for _ in core.execute_task_stream(task):
+            pass
+
+        # Must retain STANDARD (Stage 1.9: think=False, num_predict=2560)
+        assert task.reasoning_depth == ReasoningDepth.STANDARD
+        assert captured_calls[0]["think"] is False
+        assert captured_calls[0]["options"]["num_predict"] == 2560
+
+        # User explicitly requested INSTANT on a prompt that would otherwise classify as DEEP
+        captured_calls.clear()
+        req2 = TaskRequest(
+            prompt="Solve this complex multi-step puzzle.",
+            reasoning_override=ReasoningDepth.INSTANT,
+        )
+        task2 = await core.create_task(req2)
+        assert task2.reasoning_override == ReasoningDepth.INSTANT
+
+        async for _ in core.execute_task_stream(task2):
+            pass
+
+        # Must retain INSTANT
+        assert task2.reasoning_depth == ReasoningDepth.INSTANT
+        assert captured_calls[0]["think"] is False
+        assert captured_calls[0]["options"]["num_predict"] == 512
 
     await core.shutdown()
 

@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class ReasoningDepth(StrEnum):
@@ -150,6 +150,18 @@ class TaskRequest(BaseModel):
     conversation_id: str | None = None
     reasoning_override: ReasoningDepth | None = None
     stream: bool = True
+
+    @field_validator("reasoning_override", mode="before")
+    @classmethod
+    def normalize_reasoning(cls, v: Any) -> Any:
+        if v is None:
+            return None
+        if isinstance(v, str):
+            v_clean = v.strip().lower()
+            if v_clean in ("auto", "none", ""):
+                return None
+            return ReasoningDepth(v_clean)
+        return v
 
 
 class ChatMessage(BaseModel):

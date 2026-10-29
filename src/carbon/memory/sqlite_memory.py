@@ -2,6 +2,7 @@
 
 import json
 import logging
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -103,35 +104,82 @@ class SQLiteMemoryEngine(IMemoryEngine):
         return self._conn
 
     async def store(self, record: MemoryRecord) -> str:
-        """Persist a memory record."""
+        """Persist a memory record with in-place rowid preservation to avoid FTS5 corruption."""
         conn = self._ensure_connected()
         metadata_json = json.dumps(record.metadata)
         created_str = record.created_at.isoformat()
         updated_str = record.updated_at.isoformat()
         expires_str = record.expires_at.isoformat() if record.expires_at else None
 
-        await conn.execute(
-            """
-            INSERT OR REPLACE INTO memory_records (
-                id, memory_type, key, content, metadata, source,
-                confidence, created_at, updated_at, expires_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                record.id,
-                record.memory_type.value,
-                record.key,
-                record.content,
-                metadata_json,
-                record.source,
-                record.confidence,
-                created_str,
-                updated_str,
-                expires_str,
-            ),
-        )
-        await conn.commit()
-        return record.id
+        # Check if record exists by id, or for SEMANTIC records if key matches
+        existing_id: str | None = None
+        async with conn.execute(
+            "SELECT id FROM memory_records WHERE id = ?", (record.id,)
+        ) as cursor:
+            row = await cursor.fetchone()
+            if row:
+                existing_id = row[0]
+
+        if not existing_id and record.memory_type == MemoryType.SEMANTIC:
+            async with conn.execute(
+                "SELECT id FROM memory_records WHERE memory_type = ? AND key = ?",
+                (record.memory_type.value, record.key),
+            ) as cursor:
+                row = await cursor.fetchone()
+                if row:
+                    existing_id = row[0]
+
+        if existing_id:
+            await conn.execute(
+                """
+                UPDATE memory_records SET
+                    memory_type = ?,
+                    key = ?,
+                    content = ?,
+                    metadata = ?,
+                    source = ?,
+                    confidence = ?,
+                    updated_at = ?,
+                    expires_at = ?
+                WHERE id = ?
+                """,
+                (
+                    record.memory_type.value,
+                    record.key,
+                    record.content,
+                    metadata_json,
+                    record.source,
+                    record.confidence,
+                    updated_str,
+                    expires_str,
+                    existing_id,
+                ),
+            )
+            await conn.commit()
+            return existing_id
+        else:
+            await conn.execute(
+                """
+                INSERT INTO memory_records (
+                    id, memory_type, key, content, metadata, source,
+                    confidence, created_at, updated_at, expires_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    record.id,
+                    record.memory_type.value,
+                    record.key,
+                    record.content,
+                    metadata_json,
+                    record.source,
+                    record.confidence,
+                    created_str,
+                    updated_str,
+                    expires_str,
+                ),
+            )
+            await conn.commit()
+            return record.id
 
     async def retrieve(
         self, key: str, memory_type: MemoryType | None = None
@@ -154,16 +202,41 @@ class SQLiteMemoryEngine(IMemoryEngine):
     async def search(
         self, query: str, memory_type: MemoryType | None = None, limit: int = 10
     ) -> list[MemoryRecord]:
-        """Perform full-text search across memories."""
+        """Perform full-text search across memories using tokenized BM25 ranking."""
         conn = self._ensure_connected()
-        # Escape quotes for FTS syntax
-        sanitized_query = query.replace('"', '""')
+
+        # Extract search tokens and filter conversational stop words
+        raw_tokens = re.findall(r"\w+", query.lower())
+        stopwords = {
+            "what", "is", "are", "was", "were", "my", "your", "the", "a", "an",
+            "this", "that", "please", "can", "tell", "me", "do", "you", "know",
+            "about", "i", "to", "in", "of", "and", "or", "for", "it", "did",
+            "recall", "remember",
+        }
+        tokens = [t for t in raw_tokens if t not in stopwords]
+        if not tokens:
+            tokens = raw_tokens
+
+        if not tokens:
+            return []
+
+        # Expand spelling variants (favourite <-> favorite)
+        expanded_tokens = list(tokens)
+        if "favourite" in expanded_tokens and "favorite" not in expanded_tokens:
+            expanded_tokens.append("favorite")
+        elif "favorite" in expanded_tokens and "favourite" not in expanded_tokens:
+            expanded_tokens.append("favourite")
+
+        # Build FTS OR query with quoted tokens
+        fts_clauses = [f'"{t}"' for t in expanded_tokens]
+        fts_match_query = " OR ".join(fts_clauses)
+
         sql = """
             SELECT m.* FROM memory_records m
             JOIN memory_fts f ON m.rowid = f.rowid
             WHERE memory_fts MATCH ?
         """
-        params: list[Any] = [f'"{sanitized_query}"']
+        params: list[Any] = [fts_match_query]
         if memory_type:
             sql += " AND m.memory_type = ?"
             params.append(memory_type.value)
@@ -177,17 +250,24 @@ class SQLiteMemoryEngine(IMemoryEngine):
                     results.append(self._row_to_record(row))
         except Exception as e:
             logger.warning(f"FTS search fallback to LIKE for query '{query}': {e}")
-            # Fallback to simple LIKE search if query syntax fails
-            like_sql = "SELECT * FROM memory_records WHERE (key LIKE ? OR content LIKE ?)"
-            like_params: list[Any] = [f"%{query}%", f"%{query}%"]
+            like_conditions = []
+            like_params: list[Any] = []
+            for t in expanded_tokens[:6]:
+                like_conditions.append("(key LIKE ? OR content LIKE ?)")
+                like_params.extend([f"%{t}%", f"%{t}%"])
+
+            like_sql = f"SELECT * FROM memory_records WHERE ({' OR '.join(like_conditions)})"
             if memory_type:
                 like_sql += " AND memory_type = ?"
                 like_params.append(memory_type.value)
             like_sql += " ORDER BY updated_at DESC LIMIT ?"
             like_params.append(limit)
-            async with conn.execute(like_sql, like_params) as cursor:
-                async for row in cursor:
-                    results.append(self._row_to_record(row))
+            try:
+                async with conn.execute(like_sql, like_params) as cursor:
+                    async for row in cursor:
+                        results.append(self._row_to_record(row))
+            except Exception as like_err:
+                logger.error(f"LIKE fallback search failed: {like_err}")
 
         return results
 
@@ -233,6 +313,28 @@ class SQLiteMemoryEngine(IMemoryEngine):
             f"User-directed forgetting: deleted {res.rowcount} memory records matching '{query}'"
         )
         return res.rowcount
+
+    async def get_recent_conversation_turns(
+        self, conversation_id: str, limit: int = 5
+    ) -> list[MemoryRecord]:
+        """Fetch recent episodic interaction records for a specific conversation."""
+        conn = self._ensure_connected()
+        sql = """
+            SELECT * FROM memory_records
+            WHERE memory_type = ? AND json_extract(metadata, '$.conversation_id') = ?
+            ORDER BY created_at DESC LIMIT ?
+        """
+        results: list[MemoryRecord] = []
+        try:
+            async with conn.execute(
+                sql, (MemoryType.EPISODIC.value, conversation_id, limit)
+            ) as cursor:
+                async for row in cursor:
+                    results.append(self._row_to_record(row))
+        except Exception as e:
+            logger.warning(f"Error querying conversation turns: {e}")
+        results.reverse()
+        return results
 
     def _row_to_record(self, row: aiosqlite.Row) -> MemoryRecord:
         return MemoryRecord(

@@ -252,7 +252,7 @@ async def test_orchestrator_integration_mode_selection(tmp_path):
     with patch.object(
         core.provider, "generate_stream_events", side_effect=mock_generate_stream_events
     ):
-        # 1. Simple arithmetic: automatically classified as INSTANT -> think=False, num_predict=120
+        # 1. Simple arithmetic: automatically classified as INSTANT -> think=False, num_predict=512
         req_arithmetic = TaskRequest(prompt="What is 37 + 58?")
         task_arithmetic = await core.create_task(req_arithmetic)
 
@@ -261,9 +261,9 @@ async def test_orchestrator_integration_mode_selection(tmp_path):
 
         assert task_arithmetic.reasoning_depth == ReasoningDepth.INSTANT
         assert captured_calls[-1]["think"] is False
-        assert captured_calls[-1]["options"] == {"num_predict": 120, "temperature": 0.2}
+        assert captured_calls[-1]["options"] == {"num_predict": 512, "temperature": 0.2}
 
-        # 2. Complex task with concise instruction: classified as DEEP -> think=True, options=None
+        # 2. Complex task with concise instruction: classified as DEEP -> think=True, num_predict=4096
         req_complex = TaskRequest(
             prompt="Solve this multi-step mathematical puzzle. Answer in one word."
         )
@@ -274,9 +274,9 @@ async def test_orchestrator_integration_mode_selection(tmp_path):
 
         assert task_complex.reasoning_depth == ReasoningDepth.DEEP
         assert captured_calls[-1]["think"] is True
-        assert captured_calls[-1]["options"] is None
+        assert captured_calls[-1]["options"] == {"num_predict": 4096, "temperature": 0.7}
 
-        # 3. Explanatory task with concise instruction: classified as STANDARD -> think=True, options=None
+        # 3. Explanatory task with concise instruction: classified as STANDARD -> think=False, num_predict=2560
         req_standard = TaskRequest(
             prompt="Explain the time complexity of Dijkstra's algorithm. Be concise."
         )
@@ -286,7 +286,106 @@ async def test_orchestrator_integration_mode_selection(tmp_path):
             pass
 
         assert task_standard.reasoning_depth == ReasoningDepth.STANDARD
+        assert captured_calls[-1]["think"] is False
+        assert captured_calls[-1]["options"] == {"num_predict": 2560, "temperature": 0.6}
+
+    await core.shutdown()
+
+
+@pytest.mark.asyncio
+async def test_stage1_9_task_request_normalization():
+    """Verify TaskRequest correctly normalizes reasoning overrides including 'auto'."""
+    # 1. 'auto' string normalizes to None (no override)
+    req_auto = TaskRequest(prompt="Hello", reasoning_override="auto")  # type: ignore[arg-type]
+    assert req_auto.reasoning_override is None
+
+    req_auto_upper = TaskRequest(prompt="Hello", reasoning_override="AUTO")  # type: ignore[arg-type]
+    assert req_auto_upper.reasoning_override is None
+
+    req_none = TaskRequest(prompt="Hello", reasoning_override=None)
+    assert req_none.reasoning_override is None
+
+    # 2. Valid enum strings normalize to ReasoningDepth
+    req_instant = TaskRequest(prompt="Hello", reasoning_override="instant")  # type: ignore[arg-type]
+    assert req_instant.reasoning_override == ReasoningDepth.INSTANT
+
+    req_standard = TaskRequest(prompt="Hello", reasoning_override="STANDARD")  # type: ignore[arg-type]
+    assert req_standard.reasoning_override == ReasoningDepth.STANDARD
+
+    req_deep = TaskRequest(prompt="Hello", reasoning_override="deep")  # type: ignore[arg-type]
+    assert req_deep.reasoning_override == ReasoningDepth.DEEP
+
+
+@pytest.mark.asyncio
+async def test_stage1_9_orchestrator_auto_and_explicit_routing(tmp_path):
+    """Verify Orchestrator behavior for AUTO mode vs explicit overrides."""
+    settings = Settings(
+        data_dir=tmp_path / "data",
+        database_path=tmp_path / "data" / "carbon.db",
+        audit_log_path=tmp_path / "data" / "audit.log",
+    )
+    core = CarbonCore(settings=settings)
+    await core.initialize()
+
+    captured_calls = []
+
+    async def mock_generate_stream_events(model_id, prompt, system, think=None, options=None):
+        _ = (prompt, system)
+        captured_calls.append({"model_id": model_id, "think": think, "options": options})
+        yield {"response": "Response token", "done": True}
+
+    with patch.object(
+        core.provider, "generate_stream_events", side_effect=mock_generate_stream_events
+    ):
+        # 1. AUTO mode on factual question -> classified as INSTANT, think=False
+        req_auto_fact = TaskRequest(prompt="What does RAM stand for?", reasoning_override=None)
+        task_auto_fact = await core.create_task(req_auto_fact)
+        events = []
+        async for evt in core.execute_task_stream(task_auto_fact):
+            events.append(evt)
+
+        assert task_auto_fact.reasoning_depth == ReasoningDepth.INSTANT
+        assert captured_calls[-1]["think"] is False
+        assert captured_calls[-1]["options"]["num_predict"] == 512
+        classified_evts = [e for e in events if e.get("event") == "intent_classified"]
+        assert len(classified_evts) == 1
+        assert classified_evts[0]["reasoning_depth"] == "instant"
+
+        # 2. AUTO mode on explanation -> classified as STANDARD, think=False, num_predict=2560
+        req_auto_exp = TaskRequest(prompt="Explain what a CPU does.", reasoning_override=None)
+        task_auto_exp = await core.create_task(req_auto_exp)
+        events.clear()
+        async for evt in core.execute_task_stream(task_auto_exp):
+            events.append(evt)
+
+        assert task_auto_exp.reasoning_depth == ReasoningDepth.STANDARD
+        assert captured_calls[-1]["think"] is False
+        assert captured_calls[-1]["options"]["num_predict"] == 2560
+
+        # 3. Explicit DEEP override on simple query -> forced DEEP, think=True, num_predict=4096
+        req_deep_override = TaskRequest(
+            prompt="What is 2+2?", reasoning_override=ReasoningDepth.DEEP
+        )
+        task_deep = await core.create_task(req_deep_override)
+        events.clear()
+        async for evt in core.execute_task_stream(task_deep):
+            events.append(evt)
+
+        assert task_deep.reasoning_depth == ReasoningDepth.DEEP
         assert captured_calls[-1]["think"] is True
-        assert captured_calls[-1]["options"] is None
+        assert captured_calls[-1]["options"]["num_predict"] == 4096
+
+        # 4. Explicit INSTANT override on explanation -> forced INSTANT, think=False, num_predict=512
+        req_instant_override = TaskRequest(
+            prompt="Explain quantum entanglement.", reasoning_override=ReasoningDepth.INSTANT
+        )
+        task_instant = await core.create_task(req_instant_override)
+        events.clear()
+        async for evt in core.execute_task_stream(task_instant):
+            events.append(evt)
+
+        assert task_instant.reasoning_depth == ReasoningDepth.INSTANT
+        assert captured_calls[-1]["think"] is False
+        assert captured_calls[-1]["options"]["num_predict"] == 512
 
     await core.shutdown()

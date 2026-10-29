@@ -6,6 +6,7 @@ import logging
 import os
 import secrets
 import time
+import uuid
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -30,6 +31,7 @@ from carbon.core.orchestrator import CarbonCore
 from carbon.interfaces.models import (
     ModelSwitchRequest,
     TaskRequest,
+    TaskState,
 )
 
 logger = logging.getLogger("carbon.api")
@@ -296,7 +298,7 @@ def create_app() -> FastAPI:
             await websocket.close(code=status.WS_1013_TRY_AGAIN_LATER)
             return
 
-        expected_token = getattr(app.state, "api_token", None)
+        expected_token = getattr(app.state, "api_token", None) or _get_or_create_token(get_settings())
         authenticated = False
         if not expected_token:
             authenticated = True
@@ -304,8 +306,10 @@ def create_app() -> FastAPI:
             # 1. Prefer Handshake Header authentication
             auth_header = websocket.headers.get("authorization")
             if auth_header and auth_header.startswith("Bearer "):
-                if auth_header[7:].strip() == expected_token:
+                token_cand = auth_header[7:].strip()
+                if token_cand == expected_token or token_cand == _get_or_create_token(get_settings()):
                     authenticated = True
+                    app.state.api_token = token_cand
 
         await websocket.accept()
 
@@ -317,11 +321,14 @@ def create_app() -> FastAPI:
                     websocket.receive_text(), timeout=WS_AUTH_TIMEOUT_SECONDS
                 )
                 auth_payload = json.loads(auth_data)
+                cand = auth_payload.get("token")
+                disk_token = _get_or_create_token(get_settings())
                 if (
                     auth_payload.get("action") == "auth"
-                    and auth_payload.get("token") == expected_token
+                    and (cand == expected_token or cand == disk_token)
                 ):
                     authenticated = True
+                    app.state.api_token = cand
                     await websocket.send_json({"event": "authenticated"})
                 else:
                     logger.warning("WebSocket authentication failed: invalid token in auth frame.")
@@ -348,6 +355,26 @@ def create_app() -> FastAPI:
             f"WebSocket client connected and authenticated to /ws/chat (active: {active_ws_connections})"
         )
 
+        session_conversation_id = f"conv-{uuid.uuid4().hex[:8]}"
+        active_task_id: str | None = None
+        owned_task_ids: set[str] = set()
+
+        def _cleanup_connection_task() -> None:
+            nonlocal active_task_id
+            if active_task_id and active_task_id in owned_task_ids:
+                tid = active_task_id
+                active_task_id = None
+                target_task = c.get_task(tid)
+                if target_task:
+                    if target_task.state not in (
+                        TaskState.COMPLETED,
+                        TaskState.FAILED,
+                        TaskState.CANCELLED,
+                    ):
+                        c.cancel_task(tid)
+                    if hasattr(c, "_tasks") and tid in c._tasks:
+                        del c._tasks[tid]
+
         try:
             while True:
                 data_text = await websocket.receive_text()
@@ -359,10 +386,20 @@ def create_app() -> FastAPI:
 
                 action = payload.get("action", "submit")
 
+                if action == "auth":
+                    token = payload.get("token")
+                    if token == expected_token:
+                        await websocket.send_json({"event": "authenticated"})
+                    else:
+                        await websocket.send_json({"event": "error", "message": "Invalid token."})
+                    continue
+
                 if action == "cancel":
                     task_id = payload.get("task_id", "")
                     if task_id:
                         c.cancel_task(task_id)
+                        if active_task_id == task_id:
+                            active_task_id = None
                         await websocket.send_json({"event": "cancelled", "task_id": task_id})
                     continue
 
@@ -375,31 +412,56 @@ def create_app() -> FastAPI:
                         )
                         continue
 
+                    # Maintain conversation continuity across the WebSocket session
+                    conv_id = payload.get("conversation_id")
+                    if conv_id:
+                        session_conversation_id = conv_id
+                    else:
+                        conv_id = session_conversation_id
+
                     req = TaskRequest(
                         prompt=prompt,
-                        conversation_id=payload.get("conversation_id"),
+                        conversation_id=conv_id,
                         reasoning_override=payload.get("reasoning"),
                         stream=True,
                     )
                     task = await c.create_task(req)
+                    active_task_id = task.task_id
+                    owned_task_ids.add(task.task_id)
+                    reasoning_mode = (
+                        "auto" if task.reasoning_override is None else task.reasoning_override.value
+                    )
                     await websocket.send_json(
                         {
                             "event": "task_created",
                             "task_id": task.task_id,
                             "conversation_id": task.conversation_id,
+                            "reasoning_mode": reasoning_mode,
                             "t_backend_receipt": t_backend_receipt,
                         }
                     )
 
                     # Stream task execution events
-                    async for event in c.execute_task_stream(task):
-                        await websocket.send_json(event)
+                    try:
+                        async for event in c.execute_task_stream(task):
+                            await websocket.send_json(event)
+                    finally:
+                        if task.state in (
+                            TaskState.COMPLETED,
+                            TaskState.FAILED,
+                            TaskState.CANCELLED,
+                        ):
+                            if active_task_id == task.task_id:
+                                active_task_id = None
 
         except WebSocketDisconnect:
             logger.info("WebSocket client disconnected.")
+            _cleanup_connection_task()
         except Exception as e:
             logger.error(f"WebSocket error: {e}", exc_info=True)
+            _cleanup_connection_task()
         finally:
+            _cleanup_connection_task()
             active_ws_connections = max(0, active_ws_connections - 1)
 
     return app

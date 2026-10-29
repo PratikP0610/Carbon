@@ -1,0 +1,908 @@
+{
+  "metadata": {
+    "stage": "1.9",
+    "audit_type": "Reasoning Mode Optimization Benchmark",
+    "device": "Apple MacBook Air M5, 16GB Unified Memory",
+    "os": "macOS 27.0.1",
+    "model": "qwen3.5:9b (Q4_K_M)",
+    "ollama_context": 4096,
+    "warmup_run": {
+      "prompt": "Ping",
+      "requested_mode": "instant",
+      "executed_mode": "instant",
+      "classified_category": "CONVERSATIONAL",
+      "classified_depth": "instant",
+      "durations": {
+        "total_duration": 0.476,
+        "ack_latency": 0.0003,
+        "classification_latency": 0.0009,
+        "ttft": 0.335,
+        "thinking_duration": 0.0,
+        "visible_duration": 0.141
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 1,
+        "total_tokens": 1,
+        "thinking_tps": 0.0,
+        "visible_tps": 7.09
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 5,
+        "error": null,
+        "snippet": "Pong."
+      }
+    },
+    "timestamp": "2026-10-28T19:11:07Z",
+    "total_runs": 24
+  },
+  "category_summaries": {
+    "A_factual_auto": {
+      "id": "A_factual_auto",
+      "category": "A. Simple factual (AUTO)",
+      "mode": "auto",
+      "sample_size": 3,
+      "total_duration_median": 0.5,
+      "total_duration_mean": 0.54,
+      "total_duration_min": 0.49,
+      "total_duration_max": 0.63,
+      "ttft_median": 0.13,
+      "thinking_time_median": 0.0,
+      "visible_time_median": 0.37,
+      "visible_tokens_median": 9,
+      "classified_depth": "instant"
+    },
+    "A_factual_instant": {
+      "id": "A_factual_instant",
+      "category": "A. Simple factual (INSTANT)",
+      "mode": "instant",
+      "sample_size": 3,
+      "total_duration_median": 0.49,
+      "total_duration_mean": 0.49,
+      "total_duration_min": 0.48,
+      "total_duration_max": 0.5,
+      "ttft_median": 0.13,
+      "thinking_time_median": 0.0,
+      "visible_time_median": 0.37,
+      "visible_tokens_median": 9,
+      "classified_depth": "instant"
+    },
+    "B_arithmetic_auto": {
+      "id": "B_arithmetic_auto",
+      "category": "B. Arithmetic (AUTO)",
+      "mode": "auto",
+      "sample_size": 3,
+      "total_duration_median": 0.26,
+      "total_duration_mean": 0.32,
+      "total_duration_min": 0.23,
+      "total_duration_max": 0.47,
+      "ttft_median": 0.16,
+      "thinking_time_median": 0.0,
+      "visible_time_median": 0.1,
+      "visible_tokens_median": 1,
+      "classified_depth": "instant"
+    },
+    "C_short_expl_auto": {
+      "id": "C_short_expl_auto",
+      "category": "C. Short explanation (AUTO -> STANDARD)",
+      "mode": "auto",
+      "sample_size": 3,
+      "total_duration_median": 6.1,
+      "total_duration_mean": 6.46,
+      "total_duration_min": 5.57,
+      "total_duration_max": 7.71,
+      "ttft_median": 0.2,
+      "thinking_time_median": 0.0,
+      "visible_time_median": 5.9,
+      "visible_tokens_median": 182,
+      "classified_depth": "standard"
+    },
+    "D_structured_expl_std": {
+      "id": "D_structured_expl_std",
+      "category": "D. Structured explanation (STANDARD, think=False)",
+      "mode": "standard",
+      "sample_size": 3,
+      "total_duration_median": 39.74,
+      "total_duration_mean": 37.15,
+      "total_duration_min": 21.53,
+      "total_duration_max": 50.19,
+      "ttft_median": 0.18,
+      "thinking_time_median": 0.0,
+      "visible_time_median": 39.56,
+      "visible_tokens_median": 849,
+      "classified_depth": "standard"
+    },
+    "E_coding_std": {
+      "id": "E_coding_std",
+      "category": "E. Java coding (STANDARD, think=False)",
+      "mode": "standard",
+      "sample_size": 3,
+      "total_duration_median": 61.71,
+      "total_duration_mean": 62.86,
+      "total_duration_min": 53.43,
+      "total_duration_max": 73.44,
+      "ttft_median": 0.24,
+      "thinking_time_median": 0.0,
+      "visible_time_median": 61.23,
+      "visible_tokens_median": 1010,
+      "classified_depth": "standard"
+    },
+    "F_analytical_std": {
+      "id": "F_analytical_std",
+      "category": "F. Analytical (STANDARD, think=False)",
+      "mode": "standard",
+      "sample_size": 3,
+      "total_duration_median": 105.28,
+      "total_duration_mean": 100.95,
+      "total_duration_min": 79.73,
+      "total_duration_max": 117.82,
+      "ttft_median": 0.24,
+      "thinking_time_median": 0.0,
+      "visible_time_median": 105.08,
+      "visible_tokens_median": 1269,
+      "classified_depth": "standard"
+    },
+    "G_deep_reasoning_deep": {
+      "id": "G_deep_reasoning_deep",
+      "category": "G. Deep multi-step reasoning (DEEP, think=True)",
+      "mode": "deep",
+      "sample_size": 3,
+      "total_duration_median": 180.0,
+      "total_duration_mean": 178.56,
+      "total_duration_min": 170.51,
+      "total_duration_max": 185.18,
+      "ttft_median": 130.24,
+      "thinking_time_median": 130.05,
+      "visible_time_median": 47.6,
+      "visible_tokens_median": 512,
+      "classified_depth": "deep"
+    }
+  },
+  "observations": [
+    {
+      "prompt": "What does RAM stand for?",
+      "requested_mode": "auto",
+      "executed_mode": "auto",
+      "classified_category": "CONVERSATIONAL",
+      "classified_depth": "instant",
+      "durations": {
+        "total_duration": 0.634,
+        "ack_latency": 0.0004,
+        "classification_latency": 0.0016,
+        "ttft": 0.311,
+        "thinking_duration": 0.0,
+        "visible_duration": 0.323
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 9,
+        "total_tokens": 9,
+        "thinking_tps": 0.0,
+        "visible_tps": 27.83
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 36,
+        "error": null,
+        "snippet": "RAM stands for Random Access Memory."
+      },
+      "benchmark_id": "A_factual_auto",
+      "category": "A. Simple factual (AUTO)",
+      "repetition": 1
+    },
+    {
+      "prompt": "What does RAM stand for?",
+      "requested_mode": "auto",
+      "executed_mode": "auto",
+      "classified_category": "CONVERSATIONAL",
+      "classified_depth": "instant",
+      "durations": {
+        "total_duration": 0.491,
+        "ack_latency": 0.0006,
+        "classification_latency": 0.0002,
+        "ttft": 0.116,
+        "thinking_duration": 0.0,
+        "visible_duration": 0.375
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 9,
+        "total_tokens": 9,
+        "thinking_tps": 0.0,
+        "visible_tps": 23.99
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 36,
+        "error": null,
+        "snippet": "RAM stands for Random Access Memory."
+      },
+      "benchmark_id": "A_factual_auto",
+      "category": "A. Simple factual (AUTO)",
+      "repetition": 2
+    },
+    {
+      "prompt": "What does RAM stand for?",
+      "requested_mode": "auto",
+      "executed_mode": "auto",
+      "classified_category": "CONVERSATIONAL",
+      "classified_depth": "instant",
+      "durations": {
+        "total_duration": 0.497,
+        "ack_latency": 0.0007,
+        "classification_latency": 0.0001,
+        "ttft": 0.127,
+        "thinking_duration": 0.0,
+        "visible_duration": 0.37
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 9,
+        "total_tokens": 9,
+        "thinking_tps": 0.0,
+        "visible_tps": 24.31
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 36,
+        "error": null,
+        "snippet": "RAM stands for Random Access Memory."
+      },
+      "benchmark_id": "A_factual_auto",
+      "category": "A. Simple factual (AUTO)",
+      "repetition": 3
+    },
+    {
+      "prompt": "What does RAM stand for?",
+      "requested_mode": "instant",
+      "executed_mode": "instant",
+      "classified_category": "CONVERSATIONAL",
+      "classified_depth": "instant",
+      "durations": {
+        "total_duration": 0.495,
+        "ack_latency": 0.0006,
+        "classification_latency": 0.0001,
+        "ttft": 0.127,
+        "thinking_duration": 0.0,
+        "visible_duration": 0.368
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 9,
+        "total_tokens": 9,
+        "thinking_tps": 0.0,
+        "visible_tps": 24.46
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 36,
+        "error": null,
+        "snippet": "RAM stands for Random Access Memory."
+      },
+      "benchmark_id": "A_factual_instant",
+      "category": "A. Simple factual (INSTANT)",
+      "repetition": 1
+    },
+    {
+      "prompt": "What does RAM stand for?",
+      "requested_mode": "instant",
+      "executed_mode": "instant",
+      "classified_category": "CONVERSATIONAL",
+      "classified_depth": "instant",
+      "durations": {
+        "total_duration": 0.483,
+        "ack_latency": 0.0006,
+        "classification_latency": 0.0001,
+        "ttft": 0.149,
+        "thinking_duration": 0.0,
+        "visible_duration": 0.334
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 9,
+        "total_tokens": 9,
+        "thinking_tps": 0.0,
+        "visible_tps": 26.95
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 36,
+        "error": null,
+        "snippet": "RAM stands for Random Access Memory."
+      },
+      "benchmark_id": "A_factual_instant",
+      "category": "A. Simple factual (INSTANT)",
+      "repetition": 2
+    },
+    {
+      "prompt": "What does RAM stand for?",
+      "requested_mode": "instant",
+      "executed_mode": "instant",
+      "classified_category": "CONVERSATIONAL",
+      "classified_depth": "instant",
+      "durations": {
+        "total_duration": 0.497,
+        "ack_latency": 0.0006,
+        "classification_latency": 0.0001,
+        "ttft": 0.124,
+        "thinking_duration": 0.0,
+        "visible_duration": 0.372
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 9,
+        "total_tokens": 9,
+        "thinking_tps": 0.0,
+        "visible_tps": 24.17
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 36,
+        "error": null,
+        "snippet": "RAM stands for Random Access Memory."
+      },
+      "benchmark_id": "A_factual_instant",
+      "category": "A. Simple factual (INSTANT)",
+      "repetition": 3
+    },
+    {
+      "prompt": "What is 37 + 58? Just the number.",
+      "requested_mode": "auto",
+      "executed_mode": "auto",
+      "classified_category": "CONVERSATIONAL",
+      "classified_depth": "instant",
+      "durations": {
+        "total_duration": 0.465,
+        "ack_latency": 0.0005,
+        "classification_latency": 0.0001,
+        "ttft": 0.368,
+        "thinking_duration": 0.0,
+        "visible_duration": 0.097
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 1,
+        "total_tokens": 1,
+        "thinking_tps": 0.0,
+        "visible_tps": 10.33
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 2,
+        "error": null,
+        "snippet": "95"
+      },
+      "benchmark_id": "B_arithmetic_auto",
+      "category": "B. Arithmetic (AUTO)",
+      "repetition": 1
+    },
+    {
+      "prompt": "What is 37 + 58? Just the number.",
+      "requested_mode": "auto",
+      "executed_mode": "auto",
+      "classified_category": "CONVERSATIONAL",
+      "classified_depth": "instant",
+      "durations": {
+        "total_duration": 0.232,
+        "ack_latency": 0.0006,
+        "classification_latency": 0.0002,
+        "ttft": 0.124,
+        "thinking_duration": 0.0,
+        "visible_duration": 0.108
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 1,
+        "total_tokens": 1,
+        "thinking_tps": 0.0,
+        "visible_tps": 9.26
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 2,
+        "error": null,
+        "snippet": "95"
+      },
+      "benchmark_id": "B_arithmetic_auto",
+      "category": "B. Arithmetic (AUTO)",
+      "repetition": 2
+    },
+    {
+      "prompt": "What is 37 + 58? Just the number.",
+      "requested_mode": "auto",
+      "executed_mode": "auto",
+      "classified_category": "CONVERSATIONAL",
+      "classified_depth": "instant",
+      "durations": {
+        "total_duration": 0.259,
+        "ack_latency": 0.0006,
+        "classification_latency": 0.0001,
+        "ttft": 0.156,
+        "thinking_duration": 0.0,
+        "visible_duration": 0.103
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 1,
+        "total_tokens": 1,
+        "thinking_tps": 0.0,
+        "visible_tps": 9.74
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 2,
+        "error": null,
+        "snippet": "95"
+      },
+      "benchmark_id": "B_arithmetic_auto",
+      "category": "B. Arithmetic (AUTO)",
+      "repetition": 3
+    },
+    {
+      "prompt": "Explain what a CPU does in approximately 100 words.",
+      "requested_mode": "auto",
+      "executed_mode": "auto",
+      "classified_category": "GENERAL_QUERY",
+      "classified_depth": "standard",
+      "durations": {
+        "total_duration": 5.568,
+        "ack_latency": 0.0006,
+        "classification_latency": 0.0001,
+        "ttft": 0.372,
+        "thinking_duration": 0.0,
+        "visible_duration": 5.195
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 178,
+        "total_tokens": 178,
+        "thinking_tps": 0.0,
+        "visible_tps": 34.26
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 678,
+        "error": null,
+        "snippet": "The Central Processing Unit (CPU) acts as the brain of a computer, executing instructions to perform calculations and manage data flow. It fetches commands from memory, decodes the"
+      },
+      "benchmark_id": "C_short_expl_auto",
+      "category": "C. Short explanation (AUTO -> STANDARD)",
+      "repetition": 1
+    },
+    {
+      "prompt": "Explain what a CPU does in approximately 100 words.",
+      "requested_mode": "auto",
+      "executed_mode": "auto",
+      "classified_category": "GENERAL_QUERY",
+      "classified_depth": "standard",
+      "durations": {
+        "total_duration": 7.706,
+        "ack_latency": 0.0007,
+        "classification_latency": 0.0002,
+        "ttft": 0.143,
+        "thinking_duration": 0.0,
+        "visible_duration": 7.562
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 213,
+        "total_tokens": 213,
+        "thinking_tps": 0.0,
+        "visible_tps": 28.17
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 811,
+        "error": null,
+        "snippet": "The CPU (Central Processing Unit) is the primary component of a computer, often called the \"brain.\" It executes instructions from programs by performing basic arithmetic, logic, co"
+      },
+      "benchmark_id": "C_short_expl_auto",
+      "category": "C. Short explanation (AUTO -> STANDARD)",
+      "repetition": 2
+    },
+    {
+      "prompt": "Explain what a CPU does in approximately 100 words.",
+      "requested_mode": "auto",
+      "executed_mode": "auto",
+      "classified_category": "GENERAL_QUERY",
+      "classified_depth": "standard",
+      "durations": {
+        "total_duration": 6.101,
+        "ack_latency": 0.0007,
+        "classification_latency": 0.0002,
+        "ttft": 0.199,
+        "thinking_duration": 0.0,
+        "visible_duration": 5.901
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 182,
+        "total_tokens": 182,
+        "thinking_tps": 0.0,
+        "visible_tps": 30.84
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 693,
+        "error": null,
+        "snippet": "A Central Processing Unit (CPU) is the primary component of a computer that acts as its \"brain.\" It executes instructions from programs by performing basic arithmetic, logical, con"
+      },
+      "benchmark_id": "C_short_expl_auto",
+      "category": "C. Short explanation (AUTO -> STANDARD)",
+      "repetition": 3
+    },
+    {
+      "prompt": "Explain what a CPU does using a heading, a numbered list, a Python code block and one mathematical expression.",
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "classified_category": "GENERAL_QUERY",
+      "classified_depth": "standard",
+      "durations": {
+        "total_duration": 21.527,
+        "ack_latency": 0.0007,
+        "classification_latency": 0.0001,
+        "ttft": 0.419,
+        "thinking_duration": 0.0,
+        "visible_duration": 21.108
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 526,
+        "total_tokens": 526,
+        "thinking_tps": 0.0,
+        "visible_tps": 24.92
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 2000,
+        "error": null,
+        "snippet": "# The Central Processing Unit: The Brain of Your Mac  The CPU (Central Processing Unit) acts as the primary hardware component responsible for executing instructions, managing data"
+      },
+      "benchmark_id": "D_structured_expl_std",
+      "category": "D. Structured explanation (STANDARD, think=False)",
+      "repetition": 1
+    },
+    {
+      "prompt": "Explain what a CPU does using a heading, a numbered list, a Python code block and one mathematical expression.",
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "classified_category": "GENERAL_QUERY",
+      "classified_depth": "standard",
+      "durations": {
+        "total_duration": 50.185,
+        "ack_latency": 0.0005,
+        "classification_latency": 0.0001,
+        "ttft": 0.168,
+        "thinking_duration": 0.0,
+        "visible_duration": 50.017
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 1022,
+        "total_tokens": 1022,
+        "thinking_tps": 0.0,
+        "visible_tps": 20.43
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 3886,
+        "error": null,
+        "snippet": "# The Central Processing Unit: The Brain of the Computer  The **Central Processing Unit (CPU)** is the primary component of a computer system responsible for interpreting and execu"
+      },
+      "benchmark_id": "D_structured_expl_std",
+      "category": "D. Structured explanation (STANDARD, think=False)",
+      "repetition": 2
+    },
+    {
+      "prompt": "Explain what a CPU does using a heading, a numbered list, a Python code block and one mathematical expression.",
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "classified_category": "GENERAL_QUERY",
+      "classified_depth": "standard",
+      "durations": {
+        "total_duration": 39.739,
+        "ack_latency": 0.0007,
+        "classification_latency": 0.0002,
+        "ttft": 0.184,
+        "thinking_duration": 0.0,
+        "visible_duration": 39.556
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 849,
+        "total_tokens": 849,
+        "thinking_tps": 0.0,
+        "visible_tps": 21.46
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 3228,
+        "error": null,
+        "snippet": "# The Central Processing Unit: The Brain of Your Computer  The CPU (Central Processing Unit) acts as the primary component of a computer system that executes instructions to perfor"
+      },
+      "benchmark_id": "D_structured_expl_std",
+      "category": "D. Structured explanation (STANDARD, think=False)",
+      "repetition": 3
+    },
+    {
+      "prompt": "Write a Java method to find the second-largest distinct element in an integer array. Explain its time complexity.",
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "classified_category": "GENERAL_QUERY",
+      "classified_depth": "standard",
+      "durations": {
+        "total_duration": 61.709,
+        "ack_latency": 0.0006,
+        "classification_latency": 0.0001,
+        "ttft": 0.478,
+        "thinking_duration": 0.0,
+        "visible_duration": 61.231
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 1010,
+        "total_tokens": 1010,
+        "thinking_tps": 0.0,
+        "visible_tps": 16.49
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 3838,
+        "error": null,
+        "snippet": "Here is a robust and efficient Java method to find the second-largest distinct element in an integer array, followed by an explanation of its time complexity.  ### Java Implementat"
+      },
+      "benchmark_id": "E_coding_std",
+      "category": "E. Java coding (STANDARD, think=False)",
+      "repetition": 1
+    },
+    {
+      "prompt": "Write a Java method to find the second-largest distinct element in an integer array. Explain its time complexity.",
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "classified_category": "GENERAL_QUERY",
+      "classified_depth": "standard",
+      "durations": {
+        "total_duration": 73.436,
+        "ack_latency": 0.0007,
+        "classification_latency": 0.0002,
+        "ttft": 0.215,
+        "thinking_duration": 0.0,
+        "visible_duration": 73.221
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 1186,
+        "total_tokens": 1186,
+        "thinking_tps": 0.0,
+        "visible_tps": 16.2
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 4509,
+        "error": null,
+        "snippet": "Here is a robust and efficient Java method to find the second-largest distinct element in an integer array, along with an explanation of its time complexity.  ### The Solution  Thi"
+      },
+      "benchmark_id": "E_coding_std",
+      "category": "E. Java coding (STANDARD, think=False)",
+      "repetition": 2
+    },
+    {
+      "prompt": "Write a Java method to find the second-largest distinct element in an integer array. Explain its time complexity.",
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "classified_category": "GENERAL_QUERY",
+      "classified_depth": "standard",
+      "durations": {
+        "total_duration": 53.432,
+        "ack_latency": 0.0007,
+        "classification_latency": 0.0002,
+        "ttft": 0.242,
+        "thinking_duration": 0.0,
+        "visible_duration": 53.19
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 822,
+        "total_tokens": 822,
+        "thinking_tps": 0.0,
+        "visible_tps": 15.45
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 3125,
+        "error": null,
+        "snippet": "Here is a robust and efficient Java method to find the second-largest **distinct** element in an integer array, followed by an explanation of its time complexity.  ### Java Impleme"
+      },
+      "benchmark_id": "E_coding_std",
+      "category": "E. Java coding (STANDARD, think=False)",
+      "repetition": 3
+    },
+    {
+      "prompt": "Explain why binary search requires sorted input and demonstrate what can go wrong when the input is unsorted.",
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "classified_category": "GENERAL_QUERY",
+      "classified_depth": "standard",
+      "durations": {
+        "total_duration": 79.729,
+        "ack_latency": 0.0006,
+        "classification_latency": 0.0002,
+        "ttft": 0.451,
+        "thinking_duration": 0.0,
+        "visible_duration": 79.277
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 1053,
+        "total_tokens": 1053,
+        "thinking_tps": 0.0,
+        "visible_tps": 13.28
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 4003,
+        "error": null,
+        "snippet": "Binary search relies on the fundamental property that **data must be sorted** to function correctly. Here is the explanation of why this is necessary and a demonstration of the fai"
+      },
+      "benchmark_id": "F_analytical_std",
+      "category": "F. Analytical (STANDARD, think=False)",
+      "repetition": 1
+    },
+    {
+      "prompt": "Explain why binary search requires sorted input and demonstrate what can go wrong when the input is unsorted.",
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "classified_category": "GENERAL_QUERY",
+      "classified_depth": "standard",
+      "durations": {
+        "total_duration": 105.284,
+        "ack_latency": 0.0006,
+        "classification_latency": 0.0002,
+        "ttft": 0.2,
+        "thinking_duration": 0.0,
+        "visible_duration": 105.084
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 1269,
+        "total_tokens": 1269,
+        "thinking_tps": 0.0,
+        "visible_tps": 12.08
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 4823,
+        "error": null,
+        "snippet": "### Why Binary Search Requires Sorted Input  Binary search relies on the fundamental property of **monotonicity** found in sorted data: if you know a value exists in a range, it mu"
+      },
+      "benchmark_id": "F_analytical_std",
+      "category": "F. Analytical (STANDARD, think=False)",
+      "repetition": 2
+    },
+    {
+      "prompt": "Explain why binary search requires sorted input and demonstrate what can go wrong when the input is unsorted.",
+      "requested_mode": "standard",
+      "executed_mode": "standard",
+      "classified_category": "GENERAL_QUERY",
+      "classified_depth": "standard",
+      "durations": {
+        "total_duration": 117.822,
+        "ack_latency": 0.0007,
+        "classification_latency": 0.0003,
+        "ttft": 0.24,
+        "thinking_duration": 0.0,
+        "visible_duration": 117.581
+      },
+      "tokens": {
+        "thinking_tokens": 0,
+        "visible_tokens": 1347,
+        "total_tokens": 1347,
+        "thinking_tps": 0.0,
+        "visible_tps": 11.46
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 5122,
+        "error": null,
+        "snippet": "### Why Binary Search Requires Sorted Input  Binary search relies on the fundamental property of **order** to function correctly. The algorithm operates by repeatedly dividing the"
+      },
+      "benchmark_id": "F_analytical_std",
+      "category": "F. Analytical (STANDARD, think=False)",
+      "repetition": 3
+    },
+    {
+      "prompt": "You have 8 billiard balls, one of which is slightly heavier than the other 7, which all weigh exactly the same. You have a balance scale. Explain step-by-step how to identify the heavier ball using the scale at most 2 times.",
+      "requested_mode": "deep",
+      "executed_mode": "deep",
+      "classified_category": "COMPLEX_TASK",
+      "classified_depth": "deep",
+      "durations": {
+        "total_duration": 185.176,
+        "ack_latency": 0.0006,
+        "classification_latency": 0.0002,
+        "ttft": 137.58,
+        "thinking_duration": 137.028,
+        "visible_duration": 47.596
+      },
+      "tokens": {
+        "thinking_tokens": 1689,
+        "visible_tokens": 512,
+        "total_tokens": 2201,
+        "thinking_tps": 12.33,
+        "visible_tps": 10.76
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 1949,
+        "error": null,
+        "snippet": "To identify the heavier billiard ball among 8 using a balance scale at most twice, you must divide the balls into groups strategically to maximize information gain with each weighi"
+      },
+      "benchmark_id": "G_deep_reasoning_deep",
+      "category": "G. Deep multi-step reasoning (DEEP, think=True)",
+      "repetition": 1
+    },
+    {
+      "prompt": "You have 8 billiard balls, one of which is slightly heavier than the other 7, which all weigh exactly the same. You have a balance scale. Explain step-by-step how to identify the heavier ball using the scale at most 2 times.",
+      "requested_mode": "deep",
+      "executed_mode": "deep",
+      "classified_category": "COMPLEX_TASK",
+      "classified_depth": "deep",
+      "durations": {
+        "total_duration": 179.999,
+        "ack_latency": 0.0005,
+        "classification_latency": 0.0002,
+        "ttft": 112.931,
+        "thinking_duration": 112.729,
+        "visible_duration": 67.068
+      },
+      "tokens": {
+        "thinking_tokens": 1340,
+        "visible_tokens": 810,
+        "total_tokens": 2150,
+        "thinking_tps": 11.89,
+        "visible_tps": 12.08
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 3081,
+        "error": null,
+        "snippet": "To identify the heavier ball among 8 billiard balls using a balance scale in at most 2 weighings, follow this procedure:  ### Reasoning Strategy A balance scale has three possible"
+      },
+      "benchmark_id": "G_deep_reasoning_deep",
+      "category": "G. Deep multi-step reasoning (DEEP, think=True)",
+      "repetition": 2
+    },
+    {
+      "prompt": "You have 8 billiard balls, one of which is slightly heavier than the other 7, which all weigh exactly the same. You have a balance scale. Explain step-by-step how to identify the heavier ball using the scale at most 2 times.",
+      "requested_mode": "deep",
+      "executed_mode": "deep",
+      "classified_category": "COMPLEX_TASK",
+      "classified_depth": "deep",
+      "durations": {
+        "total_duration": 170.514,
+        "ack_latency": 0.0006,
+        "classification_latency": 0.0001,
+        "ttft": 130.243,
+        "thinking_duration": 130.054,
+        "visible_duration": 40.271
+      },
+      "tokens": {
+        "thinking_tokens": 1511,
+        "visible_tokens": 508,
+        "total_tokens": 2019,
+        "thinking_tps": 11.62,
+        "visible_tps": 12.61
+      },
+      "quality": {
+        "has_visible_output": true,
+        "visible_char_length": 1933,
+        "error": null,
+        "snippet": "Here is the step-by-step solution to identify the heavier billiard ball using the balance scale at most two times:  ### Step 1: The First Weighing Divide the 8 balls into three gro"
+      },
+      "benchmark_id": "G_deep_reasoning_deep",
+      "category": "G. Deep multi-step reasoning (DEEP, think=True)",
+      "repetition": 3
+    }
+  ]
+}

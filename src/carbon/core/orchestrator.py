@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import re
 import time
 import uuid
 from collections.abc import AsyncGenerator
@@ -37,13 +38,22 @@ logger = logging.getLogger(__name__)
 class TaskRecord:
     """In-memory tracking record for a Carbon task."""
 
-    def __init__(self, task_id: str, prompt: str, conversation_id: str):
+    def __init__(
+        self,
+        task_id: str,
+        prompt: str,
+        conversation_id: str,
+        reasoning_override: ReasoningDepth | None = None,
+    ):
         self.task_id = task_id
         self.prompt = prompt
         self.conversation_id = conversation_id
+        self.reasoning_override = reasoning_override
         self.state: TaskState = TaskState.PENDING
         self.intent: TaskIntent | None = None
-        self.reasoning_depth: ReasoningDepth = ReasoningDepth.STANDARD
+        self.reasoning_depth: ReasoningDepth = (
+            reasoning_override if reasoning_override is not None else ReasoningDepth.STANDARD
+        )
         self.model_used: str | None = None
         self.result: str | None = None
         self.error: str | None = None
@@ -56,6 +66,7 @@ class TaskRecord:
             "task_id": self.task_id,
             "prompt": self.prompt,
             "conversation_id": self.conversation_id,
+            "reasoning_override": self.reasoning_override.value if self.reasoning_override else None,
             "state": self.state.value,
             "intent": self.intent.model_dump() if self.intent else None,
             "reasoning_depth": self.reasoning_depth.value,
@@ -65,6 +76,37 @@ class TaskRecord:
             "created_at": self.created_at.isoformat(),
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,
         }
+
+
+def _extract_memory_fact(prompt: str) -> tuple[str, str, str]:
+    """
+    Extract raw fact, normalized key, and normalized searchable content from a memory store prompt.
+    Returns: (raw_fact, key, normalized_content)
+    """
+    cleaned = re.sub(
+        r"^(?:please\s+)?(?:remember\s+(?:this|that)?|keep\s+in\s+mind\s+(?:that)?|note\s+(?:that|this)?|save\s+(?:this\s+)?(?:preference|fact|note|memory)|make\s+a\s+note\s+that)[:,\s]*",
+        "",
+        prompt.strip(),
+        flags=re.IGNORECASE,
+    ).strip()
+    cleaned = re.sub(r"[\s.?!]*$", "", cleaned).strip()
+
+    match = re.match(r"^(?:my\s+)?(.*?)\s+(?:is|are|=|:)\s+(.*)$", cleaned, re.IGNORECASE)
+    if match:
+        subject = match.group(1).strip()
+        val = match.group(2).strip()
+        norm_subject = re.sub(r"\bfavourite\b", "favorite", subject.lower())
+        slug = re.sub(r"[^a-z0-9]+", "_", norm_subject).strip("_")
+        key = f"user:preference:{slug}"
+        normalized_content = f"User preference: my {subject} is {val}. (favorite {val})"
+    else:
+        norm = re.sub(r"\bfavourite\b", "favorite", cleaned.lower())
+        words = re.findall(r"\w+", norm)
+        slug = "_".join(words[:5]) if words else "note"
+        key = f"user:fact:{slug}"
+        normalized_content = f"User note: {cleaned}"
+
+    return cleaned, key, normalized_content
 
 
 class CarbonCore:
@@ -164,10 +206,12 @@ class CarbonCore:
         """Create and register a new task."""
         task_id = f"task-{uuid.uuid4().hex[:8]}"
         conversation_id = request.conversation_id or f"conv-{uuid.uuid4().hex[:8]}"
-        task = TaskRecord(task_id=task_id, prompt=request.prompt, conversation_id=conversation_id)
-
-        if request.reasoning_override:
-            task.reasoning_depth = request.reasoning_override
+        task = TaskRecord(
+            task_id=task_id,
+            prompt=request.prompt,
+            conversation_id=conversation_id,
+            reasoning_override=request.reasoning_override,
+        )
 
         self._tasks[task_id] = task
         return task
@@ -198,7 +242,9 @@ class CarbonCore:
             # 1. Intent Classification & Reasoning Depth
             intent = await self.intelligence.classify_intent(task.prompt)
             task.intent = intent
-            if not task.reasoning_depth or task.reasoning_depth == ReasoningDepth.STANDARD:
+            if task.reasoning_override is not None:
+                task.reasoning_depth = task.reasoning_override
+            else:
                 task.reasoning_depth = intent.reasoning_depth
 
             yield {
@@ -257,6 +303,124 @@ class CarbonCore:
                 yield {"event": "completed", "task": task.to_dict()}
                 return
 
+            # 2a. Handle persistent memory storage directive
+            if intent.category == "MEMORY_STORE":
+                raw_fact, key, norm_content = _extract_memory_fact(task.prompt)
+                record = MemoryRecord(
+                    id=str(uuid.uuid4()),
+                    memory_type=MemoryType.SEMANTIC,
+                    key=key,
+                    content=norm_content,
+                    metadata={
+                        "raw_prompt": task.prompt,
+                        "raw_fact": raw_fact,
+                        "conversation_id": task.conversation_id,
+                    },
+                    source="user_explicit",
+                )
+                try:
+                    await self.memory.store(record)
+                except Exception as store_err:
+                    logger.error(f"Failed to store memory: {store_err}", exc_info=True)
+                    task.state = TaskState.FAILED
+                    task.error = f"Database persistence failure: {store_err}"
+                    task.completed_at = datetime.now(UTC)
+                    yield {"event": "error", "message": "Failed to persist memory record to storage."}
+                    yield {"event": "failed", "error": str(store_err)}
+                    return
+
+                # Record episodic interaction
+                try:
+                    episodic_record = MemoryRecord(
+                        id=str(uuid.uuid4()),
+                        memory_type=MemoryType.EPISODIC,
+                        key=f"task:{task.task_id}",
+                        content=f"User: {task.prompt}\nCarbon: Understood. I have remembered: {raw_fact}.",
+                        metadata={"conversation_id": task.conversation_id},
+                        source="user_interaction",
+                    )
+                    await self.memory.store(episodic_record)
+                except Exception as ep_err:
+                    logger.warning(f"Failed to store episodic record: {ep_err}")
+
+                confirmation = f"Understood. I have remembered: {raw_fact}."
+                task.result = confirmation
+                task.state = TaskState.COMPLETED
+                task.completed_at = datetime.now(UTC)
+                yield {"event": "token", "text": confirmation}
+                yield {"event": "completed", "task": task.to_dict()}
+                return
+
+            # 2b. Handle user-directed forgetting
+            if intent.category == "MEMORY_FORGET":
+                try:
+                    cleaned_query = re.sub(
+                        r"^(?:please\s+)?(?:forget\s+(?:that|this|about)?|delete\s+(?:my\s+)?(?:memory|preference))[:,\s]*",
+                        "",
+                        task.prompt.strip(),
+                        flags=re.IGNORECASE,
+                    ).strip()
+                    deleted_count = await self.memory.forget_by_query(cleaned_query or task.prompt)
+                except Exception as del_err:
+                    logger.error(f"Failed to forget memory: {del_err}", exc_info=True)
+                    task.state = TaskState.FAILED
+                    task.error = f"Database failure: {del_err}"
+                    task.completed_at = datetime.now(UTC)
+                    yield {"event": "error", "message": "Failed to remove memory record."}
+                    yield {"event": "failed", "error": str(del_err)}
+                    return
+
+                msg = (
+                    f"Understood. I have removed {deleted_count} memory record(s) matching your request."
+                    if deleted_count > 0
+                    else "I did not find any matching memories to forget."
+                )
+                task.result = msg
+                task.state = TaskState.COMPLETED
+                task.completed_at = datetime.now(UTC)
+                yield {"event": "token", "text": msg}
+                yield {"event": "completed", "task": task.to_dict()}
+                return
+
+            # Retrieve relevant memory context
+            relevant_memories: list[MemoryRecord] = []
+            try:
+                # 1. Direct key lookup if query refers to user's preference
+                pref_match = re.search(r"\bmy\s+([a-zA-Z0-9\s_]+)\b", task.prompt.lower())
+                if pref_match:
+                    cand = pref_match.group(1).replace("favourite", "favorite").strip()
+                    cand_words = cand.split()
+                    for end_idx in range(len(cand_words), 0, -1):
+                        slug = "_".join(cand_words[:end_idx])
+                        direct_rec = await self.memory.retrieve(
+                            f"user:preference:{slug}", memory_type=MemoryType.SEMANTIC
+                        )
+                        if direct_rec:
+                            relevant_memories.append(direct_rec)
+                            break
+
+                # 2. Semantic search in memory
+                search_results = await self.memory.search(
+                    query=task.prompt,
+                    memory_type=MemoryType.SEMANTIC,
+                    limit=5,
+                )
+                for rec in search_results:
+                    if rec.id not in [m.id for m in relevant_memories]:
+                        relevant_memories.append(rec)
+            except Exception as mem_err:
+                logger.warning(f"Memory retrieval warning: {mem_err}")
+
+            # Retrieve recent conversation context
+            conversation_context: list[MemoryRecord] = []
+            if task.conversation_id:
+                try:
+                    conversation_context = await self.memory.get_recent_conversation_turns(
+                        conversation_id=task.conversation_id, limit=3
+                    )
+                except Exception as conv_err:
+                    logger.warning(f"Conversation context retrieval warning: {conv_err}")
+
             # 3. Model Selection via CMS
             model = await self.cms.select_model_for_task(
                 capabilities_required=intent.required_capabilities,
@@ -275,13 +439,37 @@ class CarbonCore:
                     "t_inference_start": time.time(),
                 }
 
-                # Construct system prompt with reasoning directives
+                # Construct system prompt with reasoning directives and memory context
                 system_prompt = (
                     "You are Carbon, an intelligent personal AI computing assistant on macOS.\n"
                     "Provide clear, accurate, and direct responses.\n"
                 )
                 if task.reasoning_depth == ReasoningDepth.INSTANT:
                     system_prompt += "Provide direct, concise answers without verbose reasoning.\n"
+                elif task.reasoning_depth == ReasoningDepth.STANDARD:
+                    system_prompt += (
+                        "Provide a complete, well-structured, and clear answer.\n"
+                    )
+                elif task.reasoning_depth == ReasoningDepth.DEEP:
+                    system_prompt += (
+                        "Conduct thorough, focused multi-step reasoning before providing your detailed, complete answer.\n"
+                    )
+
+                if relevant_memories:
+                    system_prompt += "\nRelevant information from user's saved persistent memory:\n"
+                    for mem in relevant_memories:
+                        system_prompt += f"- {mem.content}\n"
+                elif intent.category == "MEMORY_QUERY":
+                    system_prompt += (
+                        "\nContext: No matching information was found in the user's saved memory.\n"
+                        "Instruction: Clearly state that you do not have this preference or information recorded in your memory. "
+                        "Do not guess or fabricate personal information.\n"
+                    )
+
+                if conversation_context:
+                    system_prompt += "\nRecent conversation history:\n"
+                    for turn in conversation_context:
+                        system_prompt += f"{turn.content}\n"
 
                 # Configure reasoning and generation options based on task reasoning depth
                 think_flag: bool | None = None
@@ -290,15 +478,21 @@ class CarbonCore:
                 if task.reasoning_depth == ReasoningDepth.INSTANT:
                     think_flag = False
                     options = {
-                        "num_predict": 120,
+                        "num_predict": 512,
                         "temperature": 0.2,
                     }
                 elif task.reasoning_depth == ReasoningDepth.STANDARD:
-                    # Preserve existing reasoning behaviour; do not introduce an unvalidated low limit
-                    think_flag = True
+                    think_flag = False
+                    options = {
+                        "num_predict": 2560,
+                        "temperature": 0.6,
+                    }
                 elif task.reasoning_depth == ReasoningDepth.DEEP:
-                    # Preserve existing reasoning behaviour; do not introduce an unvalidated low limit
                     think_flag = True
+                    options = {
+                        "num_predict": 4096,
+                        "temperature": 0.7,
+                    }
 
                 accumulated_tokens: list[str] = []
                 async for chunk in self.provider.generate_stream_events(

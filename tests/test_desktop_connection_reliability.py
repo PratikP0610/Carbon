@@ -1,11 +1,11 @@
 """Tests for Carbon Desktop connection lifecycle, authentication, and submission reliability."""
 
 import asyncio
-import json
+
 import pytest
 from starlette.testclient import TestClient
-from starlette.websockets import WebSocketDisconnect
 
+from carbon.interfaces.models import TaskRequest
 from carbon.main import create_app
 
 
@@ -143,4 +143,109 @@ def test_websocket_failed_submission_recovery(test_app):
         msg = ws.receive_json()
         assert msg.get("event") == "cancelled"
         assert msg.get("task_id") == "recovery-task-id"
+
+
+def test_websocket_disconnect_cleans_up_active_task(test_app):
+    """Verify disconnecting mid-stream cancels active task and removes it from core _tasks."""
+    app, client, token = test_app
+
+    # Connect and submit a task
+    task_id = None
+    with client.websocket_connect(
+        "/ws/chat",
+        headers={"Authorization": f"Bearer {token}"},
+    ) as ws:
+        ws.send_json({"action": "submit", "prompt": "Long generation prompt for disconnect test"})
+        created_evt = ws.receive_json()
+        assert created_evt.get("event") == "task_created"
+        task_id = created_evt.get("task_id")
+        assert task_id is not None
+        # Disconnect abruptly mid-stream by exiting context manager without reading to end
+
+    # Poll health endpoint: verify tasks_count drops back to 0
+    resp = client.get("/api/v1/health")
+    assert resp.status_code == 200
+    health_data = resp.json()
+    assert health_data["tasks_count"] == 0, f"Expected 0 active tasks after disconnect, got {health_data['tasks_count']}"
+
+
+def test_websocket_disconnect_preserves_other_client_task(test_app):
+    """Verify disconnecting one client never cancels or purges another client's task."""
+    app, client, token = test_app
+    import carbon.main as carbon_main
+
+    # Create an independent task belonging to Client 1 directly in Core
+    c = carbon_main.core
+    assert c is not None
+    req = TaskRequest(prompt="Client 1 task", stream=True)
+    client1_task = asyncio.run(c.create_task(req))
+    client1_task_id = client1_task.task_id
+
+    assert client1_task_id in c._tasks
+
+    # Client 2 connects via WebSocket, performs an action, and disconnects
+    with client.websocket_connect(
+        "/ws/chat",
+        headers={"Authorization": f"Bearer {token}"},
+    ) as ws:
+        ws.send_json({"action": "cancel", "task_id": "client-2-dummy"})
+        _ = ws.receive_json()
+        # Client 2 disconnects here
+
+    # Verify Client 1's task was NOT removed or corrupted by Client 2's disconnection
+    assert client1_task_id in c._tasks
+    assert c._tasks[client1_task_id].prompt == "Client 1 task"
+
+    # Cleanup Client 1 task
+    c._tasks.pop(client1_task_id, None)
+
+
+def test_websocket_disconnect_completed_task_safe(test_app):
+    """Verify disconnecting after a task has completed is safe and leaves no stale active markers."""
+    app, client, token = test_app
+
+    with client.websocket_connect(
+        "/ws/chat",
+        headers={"Authorization": f"Bearer {token}"},
+    ) as ws:
+        ws.send_json({"action": "submit", "prompt": "ping"})
+        created_evt = ws.receive_json()
+        assert created_evt.get("event") == "task_created"
+
+        # Drain until terminal state
+        while True:
+            evt = ws.receive_json()
+            if evt.get("event") in ("completed", "failed", "cancelled"):
+                break
+        # Normal disconnect after completion
+
+    # Health check remains healthy
+    resp = client.get("/api/v1/health")
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "healthy"
+
+
+def test_websocket_disconnect_already_cancelled_task_safe(test_app):
+    """Verify disconnecting after manually cancelling a task is safe."""
+    app, client, token = test_app
+
+    with client.websocket_connect(
+        "/ws/chat",
+        headers={"Authorization": f"Bearer {token}"},
+    ) as ws:
+        ws.send_json({"action": "submit", "prompt": "task to cancel"})
+        created_evt = ws.receive_json()
+        task_id = created_evt.get("task_id")
+
+        # Explicitly cancel task via WebSocket
+        ws.send_json({"action": "cancel", "task_id": task_id})
+        msg = ws.receive_json()
+        # May receive cancelled event
+        assert msg.get("event") in ("cancelled", "state_change")
+
+    # Health check remains healthy and task cleanup handles already-cancelled state
+    resp = client.get("/api/v1/health")
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "healthy"
+
 

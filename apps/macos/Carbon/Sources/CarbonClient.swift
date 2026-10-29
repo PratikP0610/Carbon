@@ -9,6 +9,7 @@ public struct ChatDisplayMessage: Identifiable, Equatable {
     public var isProcessing: Bool // Active generation prior to first user-visible token
     public var isCancelled: Bool
     public var errorMessage: String?
+    public var executedReasoningDepth: String?
     public let timestamp: Date
 
     public init(
@@ -19,6 +20,7 @@ public struct ChatDisplayMessage: Identifiable, Equatable {
         isProcessing: Bool = false,
         isCancelled: Bool = false,
         errorMessage: String? = nil,
+        executedReasoningDepth: String? = nil,
         timestamp: Date = Date()
     ) {
         self.id = id
@@ -28,6 +30,7 @@ public struct ChatDisplayMessage: Identifiable, Equatable {
         self.isProcessing = isProcessing
         self.isCancelled = isCancelled
         self.errorMessage = errorMessage
+        self.executedReasoningDepth = executedReasoningDepth
         self.timestamp = timestamp
     }
 }
@@ -63,11 +66,12 @@ public final class CarbonClient: ObservableObject {
     @Published public var isConnected: Bool = false
     @Published public var isHealthOk: Bool = false
     @Published public var activeModel: String = "qwen3.5:9b"
-    @Published public var reasoningDepth: String = "standard"
+    @Published public var reasoningDepth: String = "auto"
     @Published public var inputText: String = ""
     @Published public var messages: [ChatDisplayMessage] = []
     @Published public var isGenerating: Bool = false
     @Published public var currentTaskId: String? = nil
+    @Published public var conversationId: String = "conv-\(UUID().uuidString.prefix(8).lowercased())"
 
     private let sessionQueue: OperationQueue = {
         let q = OperationQueue()
@@ -197,14 +201,9 @@ public final class CarbonClient: ObservableObject {
     fileprivate func webSocketDidOpen(task: URLSessionWebSocketTask) {
         guard self.webSocketTask === task else { return }
 
-        if usedHeaderAuth {
-            // Header authentication was accepted during HTTP upgrade handshake.
-            // Do not send duplicate in-socket authentication messages.
-            connectionStatus = .connected
-            isConnected = true
-            reconnectAttempts = 0
-        } else if let token = resolveAuthToken() {
-            // In-socket fallback authentication
+        if let token = resolveAuthToken() {
+            // Always dispatch in-socket authentication frame to guarantee robust auth
+            // across macOS URLSession implementations where HTTP headers are not forwarded.
             connectionStatus = .authenticating
             let authPayload: [String: Any] = ["action": "auth", "token": token]
             if let data = try? JSONSerialization.data(withJSONObject: authPayload),
@@ -306,8 +305,18 @@ public final class CarbonClient: ObservableObject {
             if let tid = json["task_id"] as? String {
                 self.currentTaskId = tid
             }
+            if let cid = json["conversation_id"] as? String {
+                self.conversationId = cid
+            }
             if let lastIdx = self.messages.indices.last, self.messages[lastIdx].role == "assistant" {
                 self.messages[lastIdx].isProcessing = true
+            }
+
+        case "intent_classified":
+            if let depth = json["reasoning_depth"] as? String {
+                if let lastIdx = self.messages.indices.last, self.messages[lastIdx].role == "assistant" {
+                    self.messages[lastIdx].executedReasoningDepth = depth
+                }
             }
 
         case "thinking":
@@ -404,6 +413,7 @@ public final class CarbonClient: ObservableObject {
             "action": "submit",
             "prompt": cleanPrompt,
             "reasoning": reasoningDepth,
+            "conversation_id": conversationId,
             "client_timestamp": Date().timeIntervalSince1970
         ]
 
