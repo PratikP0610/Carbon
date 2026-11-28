@@ -1,8 +1,11 @@
 # Carbon 1.0.0 — Outstanding Risk Register
 
-**Document Date:** 2026-10-28  
-**Scope:** Phase 0 Final Verification / Phase 1 Foundation Audit  
-**Status:** Monitored & Mitigated  
+**Document Date:** 2026-10-28<br>
+**Scope:** Phase 0 Final Verification / Phase 1 Foundation Audit *(historical baseline; see notice below)*<br>
+**Status:** Monitored & Mitigated
+
+> [!NOTE]
+> **Stage 7.6 Alignment Notice:** Several items recorded in this Oct 28 register have since been resolved in Stage 5-C / 5-D / 6: **`RISK-004`** native Mach `DispatchSource` monitoring is now **IMPLEMENTED** (`apps/macos/Carbon/Sources/MemoryPressureMonitor.swift`), **`RISK-005`** WebSocket connections now receive immediate `4401` closure upon token rotation (**IMPLEMENTED**), and `Fair RWLock` references correspond to CMS `asyncio.Lock` + `_drain_event` leases. See [threat-model.md](../security/threat-model.md), [end-to-end-latency-report.md](../benchmarks/end-to-end-latency-report.md), and [verification-summary.md](../reports/verification-summary.md) for current status.
 
 ---
 

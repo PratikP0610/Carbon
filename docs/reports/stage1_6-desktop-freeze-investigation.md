@@ -15,14 +15,14 @@ During manual testing of Carbon 1.0.0, the desktop client completely froze with 
 
 The application displayed `"Reasoning..."` for approximately 8 minutes, became completely unresponsive to UI clicks (including the Stop/Cancel button), and required a force-quit (`zsh: terminated`). Subsequent inspection showed `ollama ps` had no active model in memory, while the backend at `127.0.0.1:8765` remained running and reported `tasks_count: 1`.
 
-Through root-cause diagnosis using the macOS diagnostic hang dump ([`/Library/Logs/DiagnosticReports/Carbon_2026-10-28-222556_Pratiks-MacBook-Air.hang`](file:///Library/Logs/DiagnosticReports/Carbon_2026-10-28-222556_Pratiks-MacBook-Air.hang)), static code analysis, and controlled simulation, the failure has been **100% conclusively identified**:
+Through root-cause diagnosis using the macOS diagnostic hang dump (`Carbon_hang_report`), static code analysis, and controlled simulation, the failure has been **100% conclusively identified**:
 
 1. **Primary Root Cause (Infinite Loop on Main Thread):**  
-   In [`apps/macos/Carbon/Sources/MarkdownRenderer.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/MarkdownRenderer.swift#L289-L301) and [line 405](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/MarkdownRenderer.swift#L405), `MarkdownParser.parse(_:)` enters an **unbounded infinite loop** when encountering any line starting with `#` that lacks a trailing space (e.g. the partial heading token `"#"` or `"###"` emitted at the beginning of answer generation). The heading parser rejects the line because it lacks a space, and the paragraph parser immediately breaks without advancing the index `idx`. This pinned the macOS main thread at 100% CPU inside SwiftUI's `MarkdownView.body` getter.
+   In [`apps/macos/Carbon/Sources/MarkdownRenderer.swift`](../../apps/macos/Carbon/Sources/MarkdownRenderer.swift#L289-L301) and [line 405](../../apps/macos/Carbon/Sources/MarkdownRenderer.swift#L405), `MarkdownParser.parse(_:)` enters an **unbounded infinite loop** when encountering any line starting with `#` that lacks a trailing space (e.g. the partial heading token `"#"` or `"###"` emitted at the beginning of answer generation). The heading parser rejects the line because it lacks a space, and the paragraph parser immediately breaks without advancing the index `idx`. This pinned the macOS main thread at 100% CPU inside SwiftUI's `MarkdownView.body` getter.
 2. **Cancellation Deadlock (Event Queue Starvation):**  
    Because the main thread was trapped in an infinite loop, AppKit's `CFRunLoop` was completely starved. Mouse click events from the user (including clicking the Stop button) remained trapped in `com.apple.NSEventThread` and could never be dispatched to `@MainActor`.
 3. **Backend Orphaned Task (`tasks_count: 1`):**  
-   When the user force-quit Carbon, the WebSocket connection closed. In [`src/carbon/main.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py#L421-L422), `except WebSocketDisconnect:` logs the disconnection but fails to cancel the running task or clean up `core._tasks`, leaving the task permanently in memory.
+   When the user force-quit Carbon, the WebSocket connection closed. In [`src/carbon/main.py`](../../src/carbon/main.py#L421-L422), `except WebSocketDisconnect:` logs the disconnection but fails to cancel the running task or clean up `core._tasks`, leaving the task permanently in memory.
 4. **Ollama Eviction:**  
    Ollama's default `keep_alive` duration is 5 minutes (300 seconds). Because the user observed the freeze for 8 minutes after generation completed/stalled, the idle timer expired and Ollama unloaded `qwen3.5:9b` to conserve unified memory.
 
@@ -43,34 +43,34 @@ Through root-cause diagnosis using the macOS diagnostic hang dump ([`/Library/Lo
 
 ## 3. Files and Functions Inspected
 
-1. **[`apps/macos/Carbon/Sources/MarkdownRenderer.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/MarkdownRenderer.swift)**
-   - [`MarkdownParser.parse(_:)`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/MarkdownRenderer.swift#L215-L422): Tokenizer and block splitter.
+1. **[`apps/macos/Carbon/Sources/MarkdownRenderer.swift`](../../apps/macos/Carbon/Sources/MarkdownRenderer.swift)**
+   - [`MarkdownParser.parse(_:)`](../../apps/macos/Carbon/Sources/MarkdownRenderer.swift#L215-L422): Tokenizer and block splitter.
    - Lines 289–301: Heading detection branch (`trimmed.hasPrefix("#")`).
    - Lines 372–398: Ordered list parsing and indentation continuation logic.
    - Lines 401–418: Regular paragraph parsing loop and termination conditions.
-   - [`MarkdownView.body.getter`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/MarkdownRenderer.swift#L664-L670): Synchronous invocation of `MarkdownParser.parse` within SwiftUI render cycle.
-   - [`MathFormatter.processInlineMathDelimiters(_:)`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/MarkdownRenderer.swift#L80-L172): Synchronous regex scanning and string replacements on main thread.
-2. **[`apps/macos/Carbon/Sources/ContentView.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/ContentView.swift)**
-   - [`ContentView.body`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/ContentView.swift#L54-L148): Main chat container and layout hierarchy.
-   - [`MessageBubbleView.body`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/ContentView.swift#L205-L270): Message rendering logic, `"Reasoning..."` progress indicator display, and `MarkdownView` instantiation.
-3. **[`apps/macos/Carbon/Sources/CarbonClient.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/CarbonClient.swift)**
-   - [`CarbonClient.handleIncomingJSON(_:)`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/CarbonClient.swift#L283-L370): WebSocket event deserialization on `@MainActor`.
+   - [`MarkdownView.body.getter`](../../apps/macos/Carbon/Sources/MarkdownRenderer.swift#L664-L670): Synchronous invocation of `MarkdownParser.parse` within SwiftUI render cycle.
+   - [`MathFormatter.processInlineMathDelimiters(_:)`](../../apps/macos/Carbon/Sources/MarkdownRenderer.swift#L80-L172): Synchronous regex scanning and string replacements on main thread.
+2. **[`apps/macos/Carbon/Sources/ContentView.swift`](../../apps/macos/Carbon/Sources/ContentView.swift)**
+   - [`ContentView.body`](../../apps/macos/Carbon/Sources/ContentView.swift#L54-L148): Main chat container and layout hierarchy.
+   - [`MessageBubbleView.body`](../../apps/macos/Carbon/Sources/ContentView.swift#L205-L270): Message rendering logic, `"Reasoning..."` progress indicator display, and `MarkdownView` instantiation.
+3. **[`apps/macos/Carbon/Sources/CarbonClient.swift`](../../apps/macos/Carbon/Sources/CarbonClient.swift)**
+   - [`CarbonClient.handleIncomingJSON(_:)`](../../apps/macos/Carbon/Sources/CarbonClient.swift#L283-L370): WebSocket event deserialization on `@MainActor`.
    - Line 312–316: `case "thinking"` state handling.
    - Line 318–325: `case "token"` state handling appending tokens directly to `@Published var messages`.
-   - [`CarbonClient.cancelCurrentTask()`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/CarbonClient.swift#L377-L387): UI-triggered cancellation action.
-4. **[`src/carbon/main.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py)**
+   - [`CarbonClient.cancelCurrentTask()`](../../apps/macos/Carbon/Sources/CarbonClient.swift#L377-L387): UI-triggered cancellation action.
+4. **[`src/carbon/main.py`](../../src/carbon/main.py)**
    - Line 380–427: WebSocket endpoint `/ws`.
    - Line 418–420: `async for event in c.execute_task_stream(task): await websocket.send_json(event)`.
    - Line 421–422: `except WebSocketDisconnect:` handling.
-5. **[`src/carbon/core/orchestrator.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/core/orchestrator.py)**
-   - [`CarbonCore.execute_task_stream(...)`](file:///Users/pratikpradeshi/Carbon/src/carbon/core/orchestrator.py#L236-L566): Streaming generation generator.
-   - [`CarbonCore.get_system_health()`](file:///Users/pratikpradeshi/Carbon/src/carbon/core/orchestrator.py#L189-L203): Subsystem health and `tasks_count` calculation.
-   - [`CarbonCore.cancel_task(...)`](file:///Users/pratikpradeshi/Carbon/src/carbon/core/orchestrator.py#L223-L235): Task cancellation method.
-6. **[`src/carbon/intelligence/engine.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/intelligence/engine.py)**
-   - [`IntelligenceEngine.classify_intent(...)`](file:///Users/pratikpradeshi/Carbon/src/carbon/intelligence/engine.py#L202-L280): Task classification logic and routing to `STANDARD` reasoning depth.
-7. **[`src/carbon/model_control/ollama_provider.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/model_control/ollama_provider.py)**
-   - [`OllamaProvider.generate_stream_events(...)`](file:///Users/pratikpradeshi/Carbon/src/carbon/model_control/ollama_provider.py#L125-L210): HTTP streaming integration with Ollama.
-8. **[`/Library/Logs/DiagnosticReports/Carbon_2026-10-28-222556_Pratiks-MacBook-Air.hang`](file:///Library/Logs/DiagnosticReports/Carbon_2026-10-28-222556_Pratiks-MacBook-Air.hang)**
+5. **[`src/carbon/core/orchestrator.py`](../../src/carbon/core/orchestrator.py)**
+   - [`CarbonCore.execute_task_stream(...)`](../../src/carbon/core/orchestrator.py#L236-L566): Streaming generation generator.
+   - [`CarbonCore.get_system_health()`](../../src/carbon/core/orchestrator.py#L189-L203): Subsystem health and `tasks_count` calculation.
+   - [`CarbonCore.cancel_task(...)`](../../src/carbon/core/orchestrator.py#L223-L235): Task cancellation method.
+6. **[`src/carbon/intelligence/engine.py`](../../src/carbon/intelligence/engine.py)**
+   - [`IntelligenceEngine.classify_intent(...)`](../../src/carbon/intelligence/engine.py#L202-L280): Task classification logic and routing to `STANDARD` reasoning depth.
+7. **[`src/carbon/model_control/ollama_provider.py`](../../src/carbon/model_control/ollama_provider.py)**
+   - [`OllamaProvider.generate_stream_events(...)`](../../src/carbon/model_control/ollama_provider.py#L125-L210): HTTP streaming integration with Ollama.
+8. **`Carbon_hang_report`**
    - macOS system-level diagnostic report recording 121.83 seconds of continuous main thread hang.
 
 ---
@@ -79,7 +79,7 @@ Through root-cause diagnosis using the macOS diagnostic hang dump ([`/Library/Lo
 
 ### A. macOS Diagnostic Hang Dump
 
-File: `/Library/Logs/DiagnosticReports/Carbon_2026-10-28-222556_Pratiks-MacBook-Air.hang`  
+File: `/Library/Logs/DiagnosticReports/Carbon_2026-10-28-222556_macOS-host.hang`  
 Timestamp: `2026-10-28 22:25:56.289 +0530`  
 Duration: `121.83s`  
 Process: `Carbon [37414]`  
@@ -117,7 +117,7 @@ Thread 0x10832a    Thread name "com.apple.NSEventThread"    13 samples (1-13)
 
 ### B. The Flaw in `MarkdownParser.parse`
 
-In [`apps/macos/Carbon/Sources/MarkdownRenderer.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/MarkdownRenderer.swift#L289-L301):
+In [`apps/macos/Carbon/Sources/MarkdownRenderer.swift`](../../apps/macos/Carbon/Sources/MarkdownRenderer.swift#L289-L301):
 ```swift
 // 5. Headings (# Heading)
 if trimmed.hasPrefix("#") {
@@ -207,7 +207,7 @@ Every iteration leaves `idx = 0`. Without the iteration limit, the loop executes
 
 ### D. WebSocket Disconnect Task Leak in `main.py`
 
-In [`src/carbon/main.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py#L417-L426):
+In [`src/carbon/main.py`](../../src/carbon/main.py#L417-L426):
 ```python
 # Stream task execution events
 async for event in c.execute_task_stream(task):
@@ -223,10 +223,10 @@ finally:
 When the client is terminated or killed:
 1. `websocket.send_json(event)` raises `WebSocketDisconnect`.
 2. Python executes the generator cleanup (`GeneratorExit`).
-3. In [`orchestrator.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/core/orchestrator.py#L558), `finally: await self.cms.release_inference_lease(...)` runs.
+3. In [`orchestrator.py`](../../src/carbon/core/orchestrator.py#L558), `finally: await self.cms.release_inference_lease(...)` runs.
 4. However, `c.cancel_task(task.task_id)` is **never called**.
 5. `task` is **never removed** from `c._tasks` and remains in `TaskState.STREAMING` or `TaskState.ANALYZING`.
-6. [`get_system_health()`](file:///Users/pratikpradeshi/Carbon/src/carbon/core/orchestrator.py#L202) computes `"tasks_count": len(self._tasks)`, which permanently evaluates to `1`.
+6. [`get_system_health()`](../../src/carbon/core/orchestrator.py#L202) computes `"tasks_count": len(self._tasks)`, which permanently evaluates to `1`.
 
 ---
 
@@ -246,7 +246,7 @@ When the client is terminated or killed:
 
 | Factor | Status | Verification Evidence |
 |---|---|---|
-| Main thread stuck in `MarkdownParser.parse` | **Confirmed Fact** | 13/13 samples in `/Library/Logs/DiagnosticReports/Carbon_2026-10-28-222556_Pratiks-MacBook-Air.hang` recorded at lines 221, 281, 291, 304, 317, 373. |
+| Main thread stuck in `MarkdownParser.parse` | **Confirmed Fact** | 13/13 samples in `/Library/Logs/DiagnosticReports/Carbon_2026-10-28-222556_macOS-host.hang` recorded at lines 221, 281, 291, 304, 317, 373. |
 | Infinite loop triggered by token `"#"` | **Confirmed Fact** | Swift simulation demonstrates `idx = 0` on every iteration without advancing. |
 | Beachball caused by main thread lock | **Confirmed Fact** | `com.apple.NSEventThread` blocked waiting on `CFRunLoopRunSpecific`. |
 | Cancellation button broken by UI deadlock | **Confirmed Fact** | Button action dispatch requires main runloop event pump. |
@@ -259,7 +259,7 @@ When the client is terminated or killed:
 ## 7. Recommended Minimal Fixes (Ordered by Priority)
 
 ### Priority 1: Fix Infinite Loop & Guarantee Monotonic Index Progression in `MarkdownParser`
-In [`apps/macos/Carbon/Sources/MarkdownRenderer.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/MarkdownRenderer.swift):
+In [`apps/macos/Carbon/Sources/MarkdownRenderer.swift`](../../apps/macos/Carbon/Sources/MarkdownRenderer.swift):
 1. **Fallback Advancement Guard:** Add an assertion at the end of the outer loop ensuring `idx` advances by at least 1 in every iteration. If no branch consumed the line, consume it as a fallback paragraph and increment `idx += 1`.
 2. **Heading Detection Correction:** If a line starts with `#` but has no space (e.g. while streaming `"#"` or `###CPU`), do not skip index advancement. Treat it as a regular text line until the space token arrives:
    ```swift
@@ -286,12 +286,12 @@ In [`apps/macos/Carbon/Sources/MarkdownRenderer.swift`](file:///Users/pratikprad
 3. **Fix Paragraph Parser Loop Bound:** In Section 10, ensure that if `paragraphLines.isEmpty` and the line matches a break condition that failed higher-level parsing, `idx` is still advanced by 1.
 
 ### Priority 2: Asynchronous / Debounced Markdown Parsing Off Main Actor
-In [`apps/macos/Carbon/Sources/MarkdownRenderer.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/MarkdownRenderer.swift) and [`CarbonClient.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/CarbonClient.swift):
+In [`apps/macos/Carbon/Sources/MarkdownRenderer.swift`](../../apps/macos/Carbon/Sources/MarkdownRenderer.swift) and [`CarbonClient.swift`](../../apps/macos/Carbon/Sources/CarbonClient.swift):
 1. Never parse markdown AST synchronously inside `MarkdownView.body.getter`.
 2. Parse markdown AST in background tasks (`Task.detached(priority: .userInitiated)`) or throttle/debounce parsing during streaming (e.g. at 60Hz or every 100ms), only rendering raw text or cached blocks until the stream settles.
 
 ### Priority 3: Backend Task Cancellation and Cleanup on WebSocket Disconnect
-In [`src/carbon/main.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py#L421-L426):
+In [`src/carbon/main.py`](../../src/carbon/main.py#L421-L426):
 ```python
 except WebSocketDisconnect:
     logger.info("WebSocket client disconnected. Cleaning up active task.")

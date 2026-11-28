@@ -1,0 +1,984 @@
+{
+  "benchmark_id": "STAGE-1.10-OPTIMIZED",
+  "timestamp": "2026-11-01T12:04:43.722165",
+  "platform": {
+    "device": "MacBook Air M5",
+    "memory": "16GB unified",
+    "os": "macOS 27.0.1",
+    "model": "qwen3.5:9b Q4_K_M",
+    "context_length": 4096
+  },
+  "optimizations_applied": [
+    "Concise, task-aware Standard prompts (coding vs explanation)",
+    "Controlled repetition & presence penalty evaluation",
+    "Token budget calibration (num_predict=2560 for standard with truncation detection & fence preservation)"
+  ],
+  "categories": {
+    "1_factual_instant": {
+      "category": "1. Simple factual",
+      "mode": "instant",
+      "prompt": "What does RAM stand for?",
+      "expected_depth": "instant",
+      "runs": [
+        {
+          "rep": 1,
+          "durations": {
+            "total_duration": 0.637,
+            "ack_latency": 0.0026,
+            "classification_latency": 0.0011,
+            "ttft": 0.314,
+            "thinking_duration": 0.0,
+            "visible_duration": 0.323,
+            "prompt_eval_duration_ms": 298.62,
+            "eval_duration_ms": 321.39
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 9,
+            "total_tokens": 9,
+            "thinking_tps": 0.0,
+            "visible_tps": 27.83,
+            "ollama_prompt_eval_tokens": 56,
+            "ollama_prompt_eval_tps": 187.53,
+            "ollama_eval_tokens": 8,
+            "ollama_eval_tps": 21.78
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "RAM stands for Random Access Memory."
+        },
+        {
+          "rep": 2,
+          "durations": {
+            "total_duration": 0.461,
+            "ack_latency": 0.0024,
+            "classification_latency": 0.0001,
+            "ttft": 0.101,
+            "thinking_duration": 0.0,
+            "visible_duration": 0.36,
+            "prompt_eval_duration_ms": 86.73,
+            "eval_duration_ms": 356.54
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 9,
+            "total_tokens": 9,
+            "thinking_tps": 0.0,
+            "visible_tps": 25.01,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 46.12,
+            "ollama_eval_tokens": 8,
+            "ollama_eval_tps": 19.63
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "RAM stands for Random Access Memory."
+        },
+        {
+          "rep": 3,
+          "durations": {
+            "total_duration": 0.467,
+            "ack_latency": 0.0027,
+            "classification_latency": 0.0001,
+            "ttft": 0.105,
+            "thinking_duration": 0.0,
+            "visible_duration": 0.362,
+            "prompt_eval_duration_ms": 88.45,
+            "eval_duration_ms": 357.46
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 9,
+            "total_tokens": 9,
+            "thinking_tps": 0.0,
+            "visible_tps": 24.88,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 45.22,
+            "ollama_eval_tokens": 8,
+            "ollama_eval_tps": 19.58
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "RAM stands for Random Access Memory."
+        },
+        {
+          "rep": 4,
+          "durations": {
+            "total_duration": 0.483,
+            "ack_latency": 0.004,
+            "classification_latency": 0.0001,
+            "ttft": 0.115,
+            "thinking_duration": 0.0,
+            "visible_duration": 0.368,
+            "prompt_eval_duration_ms": 94.21,
+            "eval_duration_ms": 365.17
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 9,
+            "total_tokens": 9,
+            "thinking_tps": 0.0,
+            "visible_tps": 24.46,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 42.46,
+            "ollama_eval_tokens": 8,
+            "ollama_eval_tps": 19.17
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "RAM stands for Random Access Memory."
+        },
+        {
+          "rep": 5,
+          "durations": {
+            "total_duration": 0.469,
+            "ack_latency": 0.0028,
+            "classification_latency": 0.0001,
+            "ttft": 0.107,
+            "thinking_duration": 0.0,
+            "visible_duration": 0.362,
+            "prompt_eval_duration_ms": 89.47,
+            "eval_duration_ms": 359.86
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 9,
+            "total_tokens": 9,
+            "thinking_tps": 0.0,
+            "visible_tps": 24.85,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 44.71,
+            "ollama_eval_tokens": 8,
+            "ollama_eval_tps": 19.45
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "RAM stands for Random Access Memory."
+        }
+      ],
+      "summary": {
+        "completed_runs": 5,
+        "median_total_duration": 0.469,
+        "p95_total_duration": 0.637,
+        "min_total_duration": 0.461,
+        "max_total_duration": 0.637,
+        "median_ttft": 0.107,
+        "median_visible_tokens": 9,
+        "median_thinking_tokens": 0,
+        "median_eval_tps": 19.58,
+        "any_truncated": false,
+        "all_correct": true
+      }
+    },
+    "2_short_expl_auto": {
+      "category": "2. Short explanation",
+      "mode": "auto",
+      "prompt": "Explain what a CPU does in approximately 100 words.",
+      "expected_depth": "standard",
+      "runs": [
+        {
+          "rep": 1,
+          "durations": {
+            "total_duration": 6.175,
+            "ack_latency": 0.0023,
+            "classification_latency": 0.0001,
+            "ttft": 0.399,
+            "thinking_duration": 0.0,
+            "visible_duration": 5.776,
+            "prompt_eval_duration_ms": 328.68,
+            "eval_duration_ms": 5768.09
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 195,
+            "total_tokens": 195,
+            "thinking_tps": 0.0,
+            "visible_tps": 33.76,
+            "ollama_prompt_eval_tokens": 104,
+            "ollama_prompt_eval_tps": 316.41,
+            "ollama_eval_tokens": 127,
+            "ollama_eval_tps": 21.84
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "The CPU (Central Processing Unit) is the brain of your computer, executing instructions from software to perform calculations and manage data flow. It fetches commands from memory, decodes their meaning, executes the necessary operations, and writes "
+        },
+        {
+          "rep": 2,
+          "durations": {
+            "total_duration": 6.529,
+            "ack_latency": 0.0032,
+            "classification_latency": 0.0001,
+            "ttft": 0.165,
+            "thinking_duration": 0.0,
+            "visible_duration": 6.364,
+            "prompt_eval_duration_ms": 127.07,
+            "eval_duration_ms": 6357.6
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 205,
+            "total_tokens": 205,
+            "thinking_tps": 0.0,
+            "visible_tps": 32.21,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 31.48,
+            "ollama_eval_tokens": 127,
+            "ollama_eval_tps": 19.82
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "The Central Processing Unit (CPU) acts as the computer's primary processor, executing instructions and managing data flow. It fetches commands from memory, decodes them to understand required actions, executes mathematical or logical operations, and "
+        },
+        {
+          "rep": 3,
+          "durations": {
+            "total_duration": 6.501,
+            "ack_latency": 0.002,
+            "classification_latency": 0.0001,
+            "ttft": 0.182,
+            "thinking_duration": 0.0,
+            "visible_duration": 6.319,
+            "prompt_eval_duration_ms": 87.08,
+            "eval_duration_ms": 6308.48
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 185,
+            "total_tokens": 185,
+            "thinking_tps": 0.0,
+            "visible_tps": 29.27,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 45.93,
+            "ollama_eval_tokens": 126,
+            "ollama_eval_tps": 19.81
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "The Central Processing Unit (CPU) is the primary component of a computer that executes instructions and processes data. It functions as the system's \"brain,\" performing arithmetic, logic, control, and input/output operations. The CPU fetches instruct"
+        },
+        {
+          "rep": 4,
+          "durations": {
+            "total_duration": 6.158,
+            "ack_latency": 0.003,
+            "classification_latency": 0.0001,
+            "ttft": 0.162,
+            "thinking_duration": 0.0,
+            "visible_duration": 5.997,
+            "prompt_eval_duration_ms": 83.01,
+            "eval_duration_ms": 5987.89
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 188,
+            "total_tokens": 188,
+            "thinking_tps": 0.0,
+            "visible_tps": 31.35,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 48.19,
+            "ollama_eval_tokens": 119,
+            "ollama_eval_tps": 19.71
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "The CPU (Central Processing Unit) acts as the computer's brain, executing instructions and managing data flow. It fetches commands from memory, decodes them to understand required actions, and executes operations like arithmetic or logic calculations"
+        },
+        {
+          "rep": 5,
+          "durations": {
+            "total_duration": 5.144,
+            "ack_latency": 0.0028,
+            "classification_latency": 0.0001,
+            "ttft": 0.177,
+            "thinking_duration": 0.0,
+            "visible_duration": 4.967,
+            "prompt_eval_duration_ms": 84.1,
+            "eval_duration_ms": 4959.65
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 158,
+            "total_tokens": 158,
+            "thinking_tps": 0.0,
+            "visible_tps": 31.81,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 47.56,
+            "ollama_eval_tokens": 99,
+            "ollama_eval_tps": 19.76
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "A Central Processing Unit (CPU) acts as the computer's primary logic engine. It executes instructions from software by fetching data from memory, decoding those instructions to understand required actions, and executing them via internal arithmetic l"
+        }
+      ],
+      "summary": {
+        "completed_runs": 5,
+        "median_total_duration": 6.175,
+        "p95_total_duration": 6.529,
+        "min_total_duration": 5.144,
+        "max_total_duration": 6.529,
+        "median_ttft": 0.177,
+        "median_visible_tokens": 188,
+        "median_thinking_tokens": 0,
+        "median_eval_tps": 19.81,
+        "any_truncated": false,
+        "all_correct": true
+      }
+    },
+    "3_structured_expl_std": {
+      "category": "3. Structured explanation",
+      "mode": "standard",
+      "prompt": "Explain what a CPU does using a heading, a numbered list, a Python code block and one mathematical expression.",
+      "expected_depth": "standard",
+      "runs": [
+        {
+          "rep": 1,
+          "durations": {
+            "total_duration": 19.537,
+            "ack_latency": 0.0026,
+            "classification_latency": 0.0001,
+            "ttft": 0.423,
+            "thinking_duration": 0.0,
+            "visible_duration": 19.114,
+            "prompt_eval_duration_ms": 346.13,
+            "eval_duration_ms": 19103.34
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 429,
+            "total_tokens": 429,
+            "thinking_tps": 0.0,
+            "visible_tps": 22.44,
+            "ollama_prompt_eval_tokens": 125,
+            "ollama_prompt_eval_tps": 361.13,
+            "ollama_eval_tokens": 414,
+            "ollama_eval_tps": 21.62
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "# Central Processing Unit (CPU) Functionality  1.  **Fetch**: Retrieves the next instruction from memory based on the program counter. 2.  **Decode**: Interprets the fetched instruction to determine the required operation and operands. 3.  **Execute*"
+        },
+        {
+          "rep": 2,
+          "durations": {
+            "total_duration": 24.413,
+            "ack_latency": 0.0029,
+            "classification_latency": 0.0001,
+            "ttft": 0.125,
+            "thinking_duration": 0.0,
+            "visible_duration": 24.287,
+            "prompt_eval_duration_ms": 93.96,
+            "eval_duration_ms": 24274.16
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 486,
+            "total_tokens": 486,
+            "thinking_tps": 0.0,
+            "visible_tps": 20.01,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 42.57,
+            "ollama_eval_tokens": 482,
+            "ollama_eval_tps": 19.82
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "# Central Processing Unit (CPU) Functionality  1. **Fetch**: Retrieves instructions from memory based on the Program Counter. 2. **Decode**: Translates binary instructions into control signals for execution units. 3. **Execute**: Performs arithmetic,"
+        },
+        {
+          "rep": 3,
+          "durations": {
+            "total_duration": 15.073,
+            "ack_latency": 0.0042,
+            "classification_latency": 0.0002,
+            "ttft": 0.205,
+            "thinking_duration": 0.0,
+            "visible_duration": 14.868,
+            "prompt_eval_duration_ms": 86.45,
+            "eval_duration_ms": 14854.61
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 338,
+            "total_tokens": 338,
+            "thinking_tps": 0.0,
+            "visible_tps": 22.73,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 46.27,
+            "ollama_eval_tokens": 295,
+            "ollama_eval_tps": 19.79
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "# Central Processing Unit (CPU) Functionality  1.  **Fetch**: Retrieves instructions from memory (RAM) based on the program counter. 2.  **Decode**: Translates the fetched binary instruction into control signals for execution units. 3.  **Execute**: "
+        },
+        {
+          "rep": 4,
+          "durations": {
+            "total_duration": 16.234,
+            "ack_latency": 0.0037,
+            "classification_latency": 0.0001,
+            "ttft": 0.202,
+            "thinking_duration": 0.0,
+            "visible_duration": 16.032,
+            "prompt_eval_duration_ms": 85.48,
+            "eval_duration_ms": 16023.03
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 301,
+            "total_tokens": 301,
+            "thinking_tps": 0.0,
+            "visible_tps": 18.77,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 46.8,
+            "ollama_eval_tokens": 314,
+            "ollama_eval_tps": 19.53
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "# Central Processing Unit (CPU) Functionality  1.  **Fetch**: Retrieves instructions from memory (RAM) based on the program counter. 2.  **Decode**: Translates binary machine code into control signals for execution units. 3.  **Execute**: Performs ar"
+        },
+        {
+          "rep": 5,
+          "durations": {
+            "total_duration": 14.722,
+            "ack_latency": 0.0035,
+            "classification_latency": 0.0001,
+            "ttft": 0.191,
+            "thinking_duration": 0.0,
+            "visible_duration": 14.531,
+            "prompt_eval_duration_ms": 90.24,
+            "eval_duration_ms": 14518.31
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 284,
+            "total_tokens": 284,
+            "thinking_tps": 0.0,
+            "visible_tps": 19.54,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 44.33,
+            "ollama_eval_tokens": 269,
+            "ollama_eval_tps": 18.46
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "# Central Processing Unit (CPU) Functionality  1.  **Fetch**: Retrieves instructions from the program counter in memory. 2.  **Decode**: Translates binary machine code into control signals for execution units. 3.  **Execute**: Performs arithmetic, lo"
+        }
+      ],
+      "summary": {
+        "completed_runs": 5,
+        "median_total_duration": 16.234,
+        "p95_total_duration": 24.413,
+        "min_total_duration": 14.722,
+        "max_total_duration": 24.413,
+        "median_ttft": 0.202,
+        "median_visible_tokens": 338,
+        "median_thinking_tokens": 0,
+        "median_eval_tps": 19.79,
+        "any_truncated": false,
+        "all_correct": true
+      }
+    },
+    "4_java_coding_std": {
+      "category": "4. Java coding problem",
+      "mode": "standard",
+      "prompt": "Write a Java method to find the second-largest distinct element in an integer array. Explain its time complexity.",
+      "expected_depth": "standard",
+      "runs": [
+        {
+          "rep": 1,
+          "durations": {
+            "total_duration": 18.209,
+            "ack_latency": 0.0026,
+            "classification_latency": 0.0001,
+            "ttft": 0.854,
+            "thinking_duration": 0.0,
+            "visible_duration": 17.355,
+            "prompt_eval_duration_ms": 743.18,
+            "eval_duration_ms": 17346.06
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 296,
+            "total_tokens": 296,
+            "thinking_tps": 0.0,
+            "visible_tps": 17.06,
+            "ollama_prompt_eval_tokens": 150,
+            "ollama_prompt_eval_tps": 201.83,
+            "ollama_eval_tokens": 267,
+            "ollama_eval_tps": 15.33
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "```java /**  * Returns the second largest distinct element in the given integer array.  * Throws IllegalArgumentException if fewer than 2 distinct elements exist.  */ public static int secondLargestDistinct(int[] nums) {     if (nums == null || nums."
+        },
+        {
+          "rep": 2,
+          "durations": {
+            "total_duration": 23.334,
+            "ack_latency": 0.0035,
+            "classification_latency": 0.0001,
+            "ttft": 0.204,
+            "thinking_duration": 0.0,
+            "visible_duration": 23.13,
+            "prompt_eval_duration_ms": 141.88,
+            "eval_duration_ms": 23123.65
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 336,
+            "total_tokens": 336,
+            "thinking_tps": 0.0,
+            "visible_tps": 14.53,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 28.19,
+            "ollama_eval_tokens": 305,
+            "ollama_eval_tps": 13.15
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "```java /**  * Returns the second largest distinct element in the given array.  * Throws IllegalArgumentException if fewer than two distinct elements exist.  */ public static int findSecondLargestDistinct(int[] arr) {     if (arr == null || arr.lengt"
+        },
+        {
+          "rep": 3,
+          "durations": {
+            "total_duration": 29.669,
+            "ack_latency": 0.0034,
+            "classification_latency": 0.0002,
+            "ttft": 0.187,
+            "thinking_duration": 0.0,
+            "visible_duration": 29.482,
+            "prompt_eval_duration_ms": 122.57,
+            "eval_duration_ms": 29472.75
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 460,
+            "total_tokens": 460,
+            "thinking_tps": 0.0,
+            "visible_tps": 15.6,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 32.63,
+            "ollama_eval_tokens": 403,
+            "ollama_eval_tps": 13.64
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "```java public int findSecondLargest(int[] nums) {     if (nums == null || nums.length < 2) {         throw new IllegalArgumentException(\"Array must contain at least two elements.\");     }      // Initialize first and second largest to smallest possi"
+        },
+        {
+          "rep": 4,
+          "durations": {
+            "total_duration": 17.306,
+            "ack_latency": 0.0032,
+            "classification_latency": 0.0001,
+            "ttft": 0.215,
+            "thinking_duration": 0.0,
+            "visible_duration": 17.091,
+            "prompt_eval_duration_ms": 118.34,
+            "eval_duration_ms": 17086.41
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 266,
+            "total_tokens": 266,
+            "thinking_tps": 0.0,
+            "visible_tps": 15.56,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 33.8,
+            "ollama_eval_tokens": 249,
+            "ollama_eval_tps": 14.51
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "```java /**  * Finds the second-largest distinct element in an integer array.  * Returns null if fewer than two distinct elements exist.  *   * Time Complexity: O(n) - Single pass through the array.  * Space Complexity: O(1) - Constant extra space us"
+        },
+        {
+          "rep": 5,
+          "durations": {
+            "total_duration": 23.769,
+            "ack_latency": 0.0028,
+            "classification_latency": 0.0001,
+            "ttft": 0.243,
+            "thinking_duration": 0.0,
+            "visible_duration": 23.526,
+            "prompt_eval_duration_ms": 172.59,
+            "eval_duration_ms": 23518.23
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 370,
+            "total_tokens": 370,
+            "thinking_tps": 0.0,
+            "visible_tps": 15.73,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 23.18,
+            "ollama_eval_tokens": 335,
+            "ollama_eval_tps": 14.2
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "```java /**  * Returns the second largest distinct element in the given array.  * Throws IllegalArgumentException if fewer than 2 distinct elements exist.  */ public static int findSecondLargestDistinct(int[] nums) {     if (nums == null || nums.leng"
+        }
+      ],
+      "summary": {
+        "completed_runs": 5,
+        "median_total_duration": 23.334,
+        "p95_total_duration": 29.669,
+        "min_total_duration": 17.306,
+        "max_total_duration": 29.669,
+        "median_ttft": 0.215,
+        "median_visible_tokens": 336,
+        "median_thinking_tokens": 0,
+        "median_eval_tps": 14.2,
+        "any_truncated": false,
+        "all_correct": true
+      }
+    },
+    "5_analytical_std": {
+      "category": "5. Analytical problem",
+      "mode": "standard",
+      "prompt": "Explain why binary search requires sorted input and demonstrate what can go wrong when the input is unsorted.",
+      "expected_depth": "standard",
+      "runs": [
+        {
+          "rep": 1,
+          "durations": {
+            "total_duration": 82.925,
+            "ack_latency": 0.0039,
+            "classification_latency": 0.0002,
+            "ttft": 0.603,
+            "thinking_duration": 0.0,
+            "visible_duration": 82.323,
+            "prompt_eval_duration_ms": 461.87,
+            "eval_duration_ms": 82306.47
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 1058,
+            "total_tokens": 1058,
+            "thinking_tps": 0.0,
+            "visible_tps": 12.85,
+            "ollama_prompt_eval_tokens": 111,
+            "ollama_prompt_eval_tps": 240.33,
+            "ollama_eval_tokens": 1162,
+            "ollama_eval_tps": 14.11
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "Binary search requires sorted input because its logic relies on comparing a target value to the middle element of a range to determine which half of the array contains the target. This decision-making process assumes that all elements in the left hal"
+        },
+        {
+          "rep": 2,
+          "durations": {
+            "total_duration": 36.466,
+            "ack_latency": 0.0042,
+            "classification_latency": 0.0001,
+            "ttft": 0.185,
+            "thinking_duration": 0.0,
+            "visible_duration": 36.281,
+            "prompt_eval_duration_ms": 122.24,
+            "eval_duration_ms": 36274.56
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 491,
+            "total_tokens": 491,
+            "thinking_tps": 0.0,
+            "visible_tps": 13.53,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 32.72,
+            "ollama_eval_tokens": 498,
+            "ollama_eval_tps": 13.7
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "Binary search requires sorted input because its logic relies on eliminating exactly half of the remaining search space at every step based on a comparison with the middle element. This elimination is only valid if all elements to the left of the midd"
+        },
+        {
+          "rep": 3,
+          "durations": {
+            "total_duration": 89.054,
+            "ack_latency": 0.0032,
+            "classification_latency": 0.0001,
+            "ttft": 0.181,
+            "thinking_duration": 0.0,
+            "visible_duration": 88.873,
+            "prompt_eval_duration_ms": 124.9,
+            "eval_duration_ms": 88858.54
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 1047,
+            "total_tokens": 1047,
+            "thinking_tps": 0.0,
+            "visible_tps": 11.78,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 32.02,
+            "ollama_eval_tokens": 1214,
+            "ollama_eval_tps": 13.65
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "Binary search requires sorted input because its logic relies on the monotonic property of the data: if a list is sorted, the relationship between index position and value magnitude is predictable. The algorithm compares the target value to the middle"
+        },
+        {
+          "rep": 4,
+          "durations": {
+            "total_duration": 33.235,
+            "ack_latency": 0.0026,
+            "classification_latency": 0.0001,
+            "ttft": 0.215,
+            "thinking_duration": 0.0,
+            "visible_duration": 33.021,
+            "prompt_eval_duration_ms": 127.39,
+            "eval_duration_ms": 33010.0
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 476,
+            "total_tokens": 476,
+            "thinking_tps": 0.0,
+            "visible_tps": 14.42,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 31.4,
+            "ollama_eval_tokens": 453,
+            "ollama_eval_tps": 13.69
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "Binary search requires sorted input because its core logic relies on **eliminating half of the remaining search space** at every step based on a comparison with the middle element. This elimination is only valid if the data adheres to a specific orde"
+        },
+        {
+          "rep": 5,
+          "durations": {
+            "total_duration": 30.422,
+            "ack_latency": 0.0035,
+            "classification_latency": 0.0002,
+            "ttft": 0.218,
+            "thinking_duration": 0.0,
+            "visible_duration": 30.205,
+            "prompt_eval_duration_ms": 123.22,
+            "eval_duration_ms": 30197.04
+          },
+          "tokens": {
+            "thinking_tokens": 0,
+            "visible_tokens": 423,
+            "total_tokens": 423,
+            "thinking_tps": 0.0,
+            "visible_tps": 14.0,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 32.46,
+            "ollama_eval_tokens": 406,
+            "ollama_eval_tps": 13.41
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "Binary search requires sorted input because it relies on the fundamental property of ordering to eliminate half of the remaining search space at every step. The algorithm compares the target value to the middle element; if the target is greater, it d"
+        }
+      ],
+      "summary": {
+        "completed_runs": 5,
+        "median_total_duration": 36.466,
+        "p95_total_duration": 89.054,
+        "min_total_duration": 30.422,
+        "max_total_duration": 89.054,
+        "median_ttft": 0.215,
+        "median_visible_tokens": 491,
+        "median_thinking_tokens": 0,
+        "median_eval_tps": 13.69,
+        "any_truncated": false,
+        "all_correct": true
+      }
+    },
+    "6_deep_reasoning_deep": {
+      "category": "6. Deep reasoning problem",
+      "mode": "deep",
+      "prompt": "You have 8 billiard balls, one of which is slightly heavier than the other 7, which all weigh exactly the same. You have a balance scale. Explain step-by-step how to identify the heavier ball using the scale at most 2 times.",
+      "expected_depth": "deep",
+      "runs": [
+        {
+          "rep": 1,
+          "durations": {
+            "total_duration": 156.751,
+            "ack_latency": 0.0018,
+            "classification_latency": 0.0,
+            "ttft": 130.67,
+            "thinking_duration": 129.866,
+            "visible_duration": 26.081,
+            "prompt_eval_duration_ms": 720.11,
+            "eval_duration_ms": 155900.35
+          },
+          "tokens": {
+            "thinking_tokens": 1468,
+            "visible_tokens": 335,
+            "total_tokens": 1803,
+            "thinking_tps": 11.3,
+            "visible_tps": 12.84,
+            "ollama_prompt_eval_tokens": 107,
+            "ollama_prompt_eval_tps": 148.59,
+            "ollama_eval_tokens": 1938,
+            "ollama_eval_tps": 12.42
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "To identify the heavier ball among 8 billiard balls using a balance scale at most 2 times, follow this procedure:  **Step 1: The First Weighing** Divide the 8 balls into three groups: two groups of 3 balls each, and one group of 2 balls left aside. *"
+        },
+        {
+          "rep": 2,
+          "durations": {
+            "total_duration": 131.416,
+            "ack_latency": 0.0091,
+            "classification_latency": 0.0001,
+            "ttft": 98.944,
+            "thinking_duration": 98.664,
+            "visible_duration": 32.471,
+            "prompt_eval_duration_ms": 145.15,
+            "eval_duration_ms": 131139.83
+          },
+          "tokens": {
+            "thinking_tokens": 1083,
+            "visible_tokens": 404,
+            "total_tokens": 1487,
+            "thinking_tps": 10.98,
+            "visible_tps": 12.44,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 27.56,
+            "ollama_eval_tokens": 1675,
+            "ollama_eval_tps": 12.77
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "To identify the single heavier ball among eight using a balance scale at most two times, follow this process:  ### Step 1: Initial Grouping and First Weighing Divide the 8 billiard balls into three groups: *   **Group A:** 3 balls *   **Group B:** 3 "
+        },
+        {
+          "rep": 3,
+          "durations": {
+            "total_duration": 197.968,
+            "ack_latency": 0.005,
+            "classification_latency": 0.0001,
+            "ttft": 160.431,
+            "thinking_duration": 160.158,
+            "visible_duration": 37.538,
+            "prompt_eval_duration_ms": 135.12,
+            "eval_duration_ms": 197668.15
+          },
+          "tokens": {
+            "thinking_tokens": 2132,
+            "visible_tokens": 477,
+            "total_tokens": 2609,
+            "thinking_tps": 13.31,
+            "visible_tps": 12.71,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 29.6,
+            "ollama_eval_tokens": 2469,
+            "ollama_eval_tps": 12.49
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "To identify the heavier billiard ball among eight using a balance scale at most twice, we must maximize the information gained from each weighing. A balance scale provides three possible outcomes: left side heavier, right side heavier, or balanced. T"
+        },
+        {
+          "rep": 4,
+          "durations": {
+            "total_duration": 207.343,
+            "ack_latency": 0.005,
+            "classification_latency": 0.0001,
+            "ttft": 159.692,
+            "thinking_duration": 159.455,
+            "visible_duration": 47.651,
+            "prompt_eval_duration_ms": 120.86,
+            "eval_duration_ms": 207083.15
+          },
+          "tokens": {
+            "thinking_tokens": 1990,
+            "visible_tokens": 594,
+            "total_tokens": 2584,
+            "thinking_tps": 12.48,
+            "visible_tps": 12.47,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 33.09,
+            "ollama_eval_tokens": 2659,
+            "ollama_eval_tps": 12.84
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "To identify the single heavier billiard ball among 8 using a balance scale with a maximum of two weighings, we must use an information-theoretic approach where each weighing divides the possibilities into three distinct outcomes (Left Heavy, Right He"
+        },
+        {
+          "rep": 5,
+          "durations": {
+            "total_duration": 205.65,
+            "ack_latency": 0.0033,
+            "classification_latency": 0.0001,
+            "ttft": 151.072,
+            "thinking_duration": 150.863,
+            "visible_duration": 54.578,
+            "prompt_eval_duration_ms": 130.25,
+            "eval_duration_ms": 205421.53
+          },
+          "tokens": {
+            "thinking_tokens": 2005,
+            "visible_tokens": 703,
+            "total_tokens": 2708,
+            "thinking_tps": 13.29,
+            "visible_tps": 12.88,
+            "ollama_prompt_eval_tokens": 4,
+            "ollama_prompt_eval_tps": 30.71,
+            "ollama_eval_tokens": 2643,
+            "ollama_eval_tps": 12.86
+          },
+          "is_truncated": false,
+          "is_correct": true,
+          "error": null,
+          "output_preview": "To identify the single heavier billiard ball among 8 using a balance scale in at most two weighings, we must divide the balls into groups and use the information from each weighing to narrow down the possibilities.  Here is the step-by-step solution:"
+        }
+      ],
+      "summary": {
+        "completed_runs": 5,
+        "median_total_duration": 197.968,
+        "p95_total_duration": 207.343,
+        "min_total_duration": 131.416,
+        "max_total_duration": 207.343,
+        "median_ttft": 151.072,
+        "median_visible_tokens": 477,
+        "median_thinking_tokens": 1990,
+        "median_eval_tps": 12.77,
+        "any_truncated": false,
+        "all_correct": true
+      }
+    }
+  }
+}

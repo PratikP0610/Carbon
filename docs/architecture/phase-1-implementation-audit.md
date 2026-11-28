@@ -1,10 +1,10 @@
 # Carbon 1.0.0 — Phase 1 Repository Implementation Audit
 
-**Audit Date:** 2026-10-28  
-**Auditor:** Google Antigravity (Primary Development Agent)  
-**Target Repository:** `/Users/pratikpradeshi/Carbon`  
-**Git Branch:** `main`  
-**Status:** Complete Empirical Audit & Contradiction Reconciliation  
+**Audit Date:** 2026-10-28<br>
+**Auditor:** Google Antigravity (Primary Development Agent)<br>
+**Target Repository:** Carbon repository root<br>
+**Git Branch:** `main` *(historical Oct 28 snapshot; for current Stage 5–7 verification status, see [system-design.md](system-design.md) and [verification-summary.md](../reports/verification-summary.md))*<br>
+**Status:** Historical Baseline Audit & Contradiction Reconciliation
 
 ---
 

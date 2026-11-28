@@ -21,11 +21,11 @@ Stage 1.7 remediates all three root causes with controlled, minimal implementati
 
 | File Path | Component | Scope of Modification |
 |---|---|---|
-| [`apps/macos/Carbon/Sources/MarkdownRenderer.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/MarkdownRenderer.swift) | Swift / SwiftUI Markdown Engine | Eliminated infinite loop in `MarkdownParser`; added partial heading streaming handler, indentation continuation fix, and defensive progress invariant (`idx <= startIdx` guard). Conformed AST types to `Sendable`. Implemented `MarkdownCoordinator` with 80ms throttled background parsing off `@MainActor`. |
-| [`apps/macos/Carbon/Sources/ContentView.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/ContentView.swift) | Swift / SwiftUI Chat View | Updated `MarkdownView` invocation to pass `isStreaming: message.isStreaming`, enabling dynamic throttle switching between streaming and final state. |
-| [`src/carbon/main.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py) | Python / FastAPI Server | Added `_cleanup_connection_task()` in WebSocket disconnect and finally blocks. Guaranteed task cancellation, memory purge from `core._tasks`, and strict connection task ownership isolation. |
-| [`apps/macos/Carbon/Tests/test_markdown.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Tests/test_markdown.swift) | Swift Unit & Regression Tests | Added 7 new regression suites covering partial heading tokens, malformed headers, empty/whitespace inputs, unclosed code/math blocks, single-pipe tables, multiline list continuations, stress tests, streaming throttle responsiveness, and Stop-button cancellation latency. |
-| [`tests/test_desktop_connection_reliability.py`](file:///Users/pratikpradeshi/Carbon/tests/test_desktop_connection_reliability.py) | Python Integration Tests | Added 4 new automated WebSocket disconnect regression tests covering mid-stream disconnect cleanup, cross-client task isolation, completed task disconnect safety, and already-cancelled task safety. |
+| [`apps/macos/Carbon/Sources/MarkdownRenderer.swift`](../../apps/macos/Carbon/Sources/MarkdownRenderer.swift) | Swift / SwiftUI Markdown Engine | Eliminated infinite loop in `MarkdownParser`; added partial heading streaming handler, indentation continuation fix, and defensive progress invariant (`idx <= startIdx` guard). Conformed AST types to `Sendable`. Implemented `MarkdownCoordinator` with 80ms throttled background parsing off `@MainActor`. |
+| [`apps/macos/Carbon/Sources/ContentView.swift`](../../apps/macos/Carbon/Sources/ContentView.swift) | Swift / SwiftUI Chat View | Updated `MarkdownView` invocation to pass `isStreaming: message.isStreaming`, enabling dynamic throttle switching between streaming and final state. |
+| [`src/carbon/main.py`](../../src/carbon/main.py) | Python / FastAPI Server | Added `_cleanup_connection_task()` in WebSocket disconnect and finally blocks. Guaranteed task cancellation, memory purge from `core._tasks`, and strict connection task ownership isolation. |
+| [`apps/macos/Carbon/Tests/test_markdown.swift`](../../apps/macos/Carbon/Tests/test_markdown.swift) | Swift Unit & Regression Tests | Added 7 new regression suites covering partial heading tokens, malformed headers, empty/whitespace inputs, unclosed code/math blocks, single-pipe tables, multiline list continuations, stress tests, streaming throttle responsiveness, and Stop-button cancellation latency. |
+| [`tests/test_desktop_connection_reliability.py`](../../tests/test_desktop_connection_reliability.py) | Python Integration Tests | Added 4 new automated WebSocket disconnect regression tests covering mid-stream disconnect cleanup, cross-client task isolation, completed task disconnect safety, and already-cancelled task safety. |
 
 ---
 
@@ -155,11 +155,11 @@ Automated unit tests verified parser termination, background dispatch, task canc
 
 ```bash
 # Terminal 1: Launch Backend
-cd /Users/pratikpradeshi/Carbon
+cd .
 PYTHONPATH=src ./.venv/bin/python -m carbon.main
 
 # Terminal 2: Launch Native macOS Desktop App
-cd /Users/pratikpradeshi/Carbon/apps/macos/Carbon
+cd apps/macos/Carbon
 swift run Carbon
 ```
 

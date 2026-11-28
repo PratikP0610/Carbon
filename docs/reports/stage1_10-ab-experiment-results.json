@@ -1,0 +1,158 @@
+{
+  "java_coding": {
+    "1_Baseline": {
+      "config_desc": "Current prompt, default Modelfile presence_penalty (1.5)",
+      "total_duration_sec": 37.654,
+      "ttft_sec": 0.325,
+      "token_count": 817,
+      "tps": 21.89,
+      "done_reason": "stop",
+      "is_correct": true,
+      "preview": "Here is a robust and efficient Java implementation to find the second-largest **distinct** element in an integer array, followed by an explanation of its time complexity.  ### Java Implementation  This solution uses a single-pass approach with two va"
+    },
+    "2_PromptOpt_DefaultPenalties": {
+      "config_desc": "Optimized concise prompt, default Modelfile presence_penalty (1.5)",
+      "total_duration_sec": 25.48,
+      "ttft_sec": 0.364,
+      "token_count": 549,
+      "tps": 21.86,
+      "done_reason": "stop",
+      "is_correct": true,
+      "preview": "```java /**  * Finds the second-largest distinct element in an integer array.  *   * @param nums The input array of integers.  * @return The second-largest distinct integer, or null if it does not exist.  */ public static Integer findSecondLargest(in"
+    },
+    "3_PromptOpt_ZeroPresence": {
+      "config_desc": "Optimized concise prompt, presence_penalty: 0.0",
+      "total_duration_sec": 11.167,
+      "ttft_sec": 0.111,
+      "token_count": 235,
+      "tps": 21.26,
+      "done_reason": "stop",
+      "is_correct": true,
+      "preview": "```java /**  * Returns the second-largest distinct element in the integer array.  * Throws IllegalArgumentException if fewer than two distinct elements exist.  *  * Time Complexity: O(n) - Single pass through the array.  * Space Complexity: O(1) - Co"
+    },
+    "4_PromptOpt_LowPresence_Repeat": {
+      "config_desc": "Optimized concise prompt, presence_penalty: 0.1, repeat_penalty: 1.05",
+      "total_duration_sec": 18.076,
+      "ttft_sec": 0.176,
+      "token_count": 390,
+      "tps": 21.79,
+      "done_reason": "stop",
+      "is_correct": true,
+      "preview": "```java /**  * Finds the second-largest distinct element in an integer array.  *   * @param nums The input array of integers.  * @return The second-largest distinct element, or -1 if it does not exist.  */ public static int findSecondLargestDistinct("
+    },
+    "5_PromptOpt_RepeatOnly": {
+      "config_desc": "Optimized concise prompt, presence_penalty: 0.0, repeat_penalty: 1.05",
+      "total_duration_sec": 20.815,
+      "ttft_sec": 0.114,
+      "token_count": 440,
+      "tps": 21.26,
+      "done_reason": "stop",
+      "is_correct": true,
+      "preview": "```java /**  * Finds the second largest distinct element in an integer array.  *   * @param nums The input array of integers.  * @return The second largest distinct element, or Integer.MIN_VALUE if fewer than two distinct elements exist.  * @throws I"
+    }
+  },
+  "binary_search": {
+    "1_Baseline": {
+      "config_desc": "Current prompt, default Modelfile presence_penalty (1.5)",
+      "total_duration_sec": 49.471,
+      "ttft_sec": 0.458,
+      "token_count": 996,
+      "tps": 20.32,
+      "done_reason": "stop",
+      "is_correct": true,
+      "preview": "### Why Binary Search Requires Sorted Input  Binary search relies on the fundamental property of **order** to function correctly. The algorithm works by repeatedly dividing a search interval in half. Its logic is based on the following assumption:  1"
+    },
+    "2_PromptOpt_DefaultPenalties": {
+      "config_desc": "Optimized concise prompt, default Modelfile presence_penalty (1.5)",
+      "total_duration_sec": 35.531,
+      "ttft_sec": 0.52,
+      "token_count": 604,
+      "tps": 17.25,
+      "done_reason": "stop",
+      "is_correct": true,
+      "preview": "Binary search requires sorted input because its logic relies on **halving the search space** by comparing the target value to the middle element of a range. This comparison is only valid for determining whether the target must exist in the left or ri"
+    },
+    "3_PromptOpt_ZeroPresence": {
+      "config_desc": "Optimized concise prompt, presence_penalty: 0.0",
+      "total_duration_sec": 26.194,
+      "ttft_sec": 0.189,
+      "token_count": 450,
+      "tps": 17.31,
+      "done_reason": "stop",
+      "is_correct": true,
+      "preview": "Binary search requires sorted input because it relies on the fundamental property that data is ordered to eliminate half of the remaining search space with every comparison.  **How it works with sorted data:** The algorithm compares the target value "
+    },
+    "4_PromptOpt_LowPresence_Repeat": {
+      "config_desc": "Optimized concise prompt, presence_penalty: 0.1, repeat_penalty: 1.05",
+      "total_duration_sec": 33.542,
+      "ttft_sec": 0.185,
+      "token_count": 538,
+      "tps": 16.13,
+      "done_reason": "stop",
+      "is_correct": true,
+      "preview": "Binary search requires sorted input because it relies on the **monotonic property** of the data to eliminate half the search space at every step. The algorithm assumes that if a target value is less than the current middle element, it must exist only"
+    },
+    "5_PromptOpt_RepeatOnly": {
+      "config_desc": "Optimized concise prompt, presence_penalty: 0.0, repeat_penalty: 1.05",
+      "total_duration_sec": 37.947,
+      "ttft_sec": 0.186,
+      "token_count": 597,
+      "tps": 15.81,
+      "done_reason": "stop",
+      "is_correct": true,
+      "preview": "Binary search requires sorted input because its core logic relies on **discarding half of the remaining search space** at every step based on a comparison with the middle element. This elimination strategy is mathematically valid only if all elements"
+    }
+  },
+  "cpu_structured": {
+    "1_Baseline": {
+      "config_desc": "Current prompt, default Modelfile presence_penalty (1.5)",
+      "total_duration_sec": 31.529,
+      "ttft_sec": 0.599,
+      "token_count": 494,
+      "tps": 15.97,
+      "done_reason": "stop",
+      "is_correct": true,
+      "preview": "# The Central Processing Unit: The Brain of the Computer  The CPU (Central Processing Unit) is the primary hardware component in a computer that executes instructions to perform calculations and manage data flow. It acts as the \"brain,\" orchestrating"
+    },
+    "2_PromptOpt_DefaultPenalties": {
+      "config_desc": "Optimized concise prompt, default Modelfile presence_penalty (1.5)",
+      "total_duration_sec": 24.172,
+      "ttft_sec": 0.567,
+      "token_count": 369,
+      "tps": 15.64,
+      "done_reason": "stop",
+      "is_correct": true,
+      "preview": "# Central Processing Unit (CPU) Functionality  1.  **Fetch**: The CPU retrieves instructions from the computer's memory (RAM) based on the program counter address. 2.  **Decode**: It analyzes the fetched instruction to determine the specific operatio"
+    },
+    "3_PromptOpt_ZeroPresence": {
+      "config_desc": "Optimized concise prompt, presence_penalty: 0.0",
+      "total_duration_sec": 24.329,
+      "ttft_sec": 0.221,
+      "token_count": 375,
+      "tps": 15.56,
+      "done_reason": "stop",
+      "is_correct": true,
+      "preview": "# CPU Functionality  1.  **Fetches Instructions**: The CPU retrieves machine code instructions from the system's memory (RAM) into its internal registers. 2.  **Decodes Instructions**: It analyzes the fetched instruction to determine the specific ope"
+    },
+    "4_PromptOpt_LowPresence_Repeat": {
+      "config_desc": "Optimized concise prompt, presence_penalty: 0.1, repeat_penalty: 1.05",
+      "total_duration_sec": 19.59,
+      "ttft_sec": 0.206,
+      "token_count": 299,
+      "tps": 15.43,
+      "done_reason": "stop",
+      "is_correct": true,
+      "preview": "# Central Processing Unit (CPU) Functionality  1.  **Fetch**: The CPU retrieves instructions from the system memory (RAM) based on the program counter. 2.  **Decode**: It interprets these binary instructions to determine the specific operation requir"
+    },
+    "5_PromptOpt_RepeatOnly": {
+      "config_desc": "Optimized concise prompt, presence_penalty: 0.0, repeat_penalty: 1.05",
+      "total_duration_sec": 15.995,
+      "ttft_sec": 0.193,
+      "token_count": 242,
+      "tps": 15.32,
+      "done_reason": "stop",
+      "is_correct": true,
+      "preview": "# Central Processing Unit (CPU) Functionality  1.  **Fetches Instructions**: Retrieves instructions from the computer's memory (RAM) based on the current program counter value. 2.  **Decodes Instructions**: Interprets the fetched binary code to deter"
+    }
+  }
+}

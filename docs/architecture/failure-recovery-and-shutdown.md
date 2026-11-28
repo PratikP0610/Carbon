@@ -1,5 +1,8 @@
 # Carbon Failure Recovery & Graceful Shutdown Specification
 
+> [!NOTE]
+> **Stage 7.6 Alignment Notice:** This document reflects an early Oct 28 design specification; some details below (such as ephemeral token wiping on exit and `data/carbon.corrupt.<timestamp>.db` naming) are superseded or `PLANNED`. Current Stage 5-C / 6.9-F behavior streams via `POST /api/generate` (`generate_stream_events()`), preserves `data/.carbon_token` across restarts, quarantines corrupt databases into `forensics/`, and tracks active tasks cleanly (`degraded` shutdown guard). See [system-design.md](system-design.md), [database-schema.md](database-schema.md), and [verification-summary.md](../reports/verification-summary.md).
+
 ## 1. System Shutdown Architecture
 
 Carbon 1.0.0 enforces clean termination semantics to guarantee zero database corruption, zero orphaned child processes, and zero leaked inference memory allocations.

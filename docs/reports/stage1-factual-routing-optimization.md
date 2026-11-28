@@ -14,7 +14,7 @@
 
 In Stage 1.2 (`docs/reports/stage1-factual-routing-audit.md`), an empirical audit established that ordinary simple factual questions without explicit concise instructions (e.g., *"What is the capital of Japan?"*, *"Who developed Python?"*, *"What is the boiling point of water?"*) were falling through to default `STANDARD` mode. This incurred 13 to 21 seconds of hidden chain-of-thought (CoT) reasoning generating 270 to 400 thinking tokens for trivial factual lookups.
 
-Stage 1.3 resolved this inefficiency by implementing a deterministic simple-factual classification path in [`src/carbon/intelligence/engine.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/intelligence/engine.py).
+Stage 1.3 resolved this inefficiency by implementing a deterministic simple-factual classification path in [`src/carbon/intelligence/engine.py`](../../src/carbon/intelligence/engine.py).
 
 ### Key Outcomes:
 1. **150x–224x UI Latency Speedup for Factual Queries:**
@@ -24,7 +24,7 @@ Stage 1.3 resolved this inefficiency by implementing a deterministic simple-fact
 2. **Zero Degradation for Analytical or Complex Queries:**
    - Analytical queries (e.g., *"Explain why Python is interpreted"*, *"Compare RAM and ROM"*, *"What is Dijkstra's algorithm?"*, *"What is the output of this Python program?"*) are strictly intercepted **before** the factual pattern matchers and routed to `STANDARD` or `DEEP`, preserving 100% of native model reasoning.
 3. **100% Verification Across Full Test Suites:**
-   - 8 routing reliability unit tests in [`tests/unit/test_routing_reliability.py`](file:///Users/pratikpradeshi/Carbon/tests/unit/test_routing_reliability.py) passing.
+   - 8 routing reliability unit tests in [`tests/unit/test_routing_reliability.py`](../../tests/unit/test_routing_reliability.py) passing.
    - All 57 tests across the entire Carbon test suite passing.
    - Clean linting (`ruff check src tests/unit`) with zero errors.
    - Swift package build passing with zero errors.
@@ -33,7 +33,7 @@ Stage 1.3 resolved this inefficiency by implementing a deterministic simple-fact
 
 ## 2. Classifier Architecture & Decision Precedence
 
-To eliminate unnecessary reasoning without accidentally downgrading analytical requests, the decision hierarchy in [`src/carbon/intelligence/engine.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/intelligence/engine.py) was restructured into a 7-stage deterministic pipeline:
+To eliminate unnecessary reasoning without accidentally downgrading analytical requests, the decision hierarchy in [`src/carbon/intelligence/engine.py`](../../src/carbon/intelligence/engine.py) was restructured into a 7-stage deterministic pipeline:
 
 ```mermaid
 flowchart TD
@@ -62,7 +62,7 @@ flowchart TD
 ## 3. Comprehensive Test Suite Verification
 
 ### 3.1 Unit & Regression Test Execution
-The dedicated test module [`tests/unit/test_routing_reliability.py`](file:///Users/pratikpradeshi/Carbon/tests/unit/test_routing_reliability.py) was updated and expanded with 8 comprehensive test cases:
+The dedicated test module [`tests/unit/test_routing_reliability.py`](../../tests/unit/test_routing_reliability.py) was updated and expanded with 8 comprehensive test cases:
 
 | Test Function | Scope & Assertions | Status |
 | :--- | :--- | :--- |
@@ -139,7 +139,7 @@ A qualitative review of the generated outputs confirms that removing hidden reas
 
 ## 6. Architectural Boundary & Governance Statement
 
-1. **No External Scope Expansion:** All changes were strictly restricted to heuristic routing in [`src/carbon/intelligence/engine.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/intelligence/engine.py) and accompanying regression tests in [`tests/unit/test_routing_reliability.py`](file:///Users/pratikpradeshi/Carbon/tests/unit/test_routing_reliability.py).
+1. **No External Scope Expansion:** All changes were strictly restricted to heuristic routing in [`src/carbon/intelligence/engine.py`](../../src/carbon/intelligence/engine.py) and accompanying regression tests in [`tests/unit/test_routing_reliability.py`](../../tests/unit/test_routing_reliability.py).
 2. **Preservation of Pre-Existing Workspace State:**
    - Pre-existing modifications in `apps/macos/Carbon/Sources/` were untouched.
    - Pre-existing untracked file `tests/test_desktop_connection_reliability.py` was preserved as found.

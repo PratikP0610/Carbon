@@ -1,10 +1,10 @@
 # CARBON 1.0.0 — PHASE 0 ARCHITECTURE & ENVIRONMENT VALIDATION REPORT (FINAL REVISION)
 
-**Document Version:** 1.2.0 (Phase 0 Final Verification & Repository Audit)  
-**Phase:** Phase 0 — Product and Architecture Foundation  
-**Target Hardware:** Apple MacBook Air M5 (Apple Silicon ARM64, 10-core SoC, 16 GB Unified Memory)  
-**Author:** Google Antigravity (Primary Development Agent)  
-**Status:** Submitted for Final User Verification & Phase 2 Authorization  
+**Document Version:** 1.2.0 (Phase 0 Final Verification & Repository Audit — Oct 28 Historical Baseline)<br>
+**Phase:** Phase 0 — Product and Architecture Foundation<br>
+**Target Hardware:** Apple MacBook Air M5 (Apple Silicon ARM64, 10-core SoC, 16 GB Unified Memory)<br>
+**Author:** Google Antigravity (Primary Development Agent)<br>
+**Status:** Historical Phase 0 Baseline *(for current Stage 7 status, see [system-design.md](system-design.md) and [verification-summary.md](../reports/verification-summary.md))*
 
 ---
 
@@ -36,7 +36,7 @@ This assertion was an incorrect attempt to communicate procedural compliance (i.
 - Initial unit and integration test suites (20 tests)
 
 ### 1.2 Current Implementation State by Component
-A complete audit of every component in `/Users/pratikpradeshi/Carbon` confirms:
+A complete audit of every component in the Carbon repository confirms:
 
 | Subsystem / Module | File Path | Current Status | Verification Test |
 |---|---|---|---|
@@ -62,7 +62,7 @@ None of these Phase 2 capabilities have been implemented. The existing CMS imple
 
 ## 2. API Security Verification & Hardening
 
-Detailed standalone report: [api-security-verification-report.md](file:///Users/pratikpradeshi/Carbon/docs/security/api-security-verification-report.md).
+Detailed standalone report: [api-security-verification-report.md](../security/api-security-verification-report.md).
 
 ### 2.1 Security Analysis: WebSocket Query-String Authentication
 Passing bearer tokens in WebSocket query strings (`ws://127.0.0.1:8765/ws/chat?token=...`) introduces severe exposure risks:
@@ -100,13 +100,13 @@ Local loopback servers that permit `Origin: null` in CORS allow complete Cross-O
 - Verified rotation endpoint: `POST /api/v1/auth/rotate-token` updates token on disk, invalidates previous token, and updates server runtime state.
 
 ### 2.4 Sensitive Data Logging Sanitization
-- Configured in [logging.py](file:///Users/pratikpradeshi/Carbon/src/carbon/core/logging.py) via `TokenSanitizingFilter`. Automatically masks Bearer tokens, passwords, and tokens matching regex patterns with `[REDACTED_TOKEN]`.
+- Configured in [logging.py](../../src/carbon/core/logging.py) via `TokenSanitizingFilter`. Automatically masks Bearer tokens, passwords, and tokens matching regex patterns with `[REDACTED_TOKEN]`.
 
 ---
 
 ## 3. Dynamic Memory Management & Concurrency Test Results
 
-Detailed standalone report: [dynamic-memory-pressure-test-results.md](file:///Users/pratikpradeshi/Carbon/docs/architecture/dynamic-memory-pressure-test-results.md).
+Detailed standalone report: [dynamic-memory-pressure-test-results.md](dynamic-memory-pressure-test-results.md).
 
 All 7 simulated condition tests in `tests/unit/test_memory_pressure_and_switching.py` passed cleanly:
 
@@ -166,7 +166,7 @@ Warm Performance Distributions:
 ```
 ============================= test session starts ==============================
 platform darwin -- Python 3.12.14, pytest-9.1.1, pluggy-1.7.0
-rootdir: /Users/pratikpradeshi/Carbon
+rootdir: ~/Carbon
 configfile: pyproject.toml
 testpaths: tests
 plugins: asyncio-1.4.1, anyio-4.15.1

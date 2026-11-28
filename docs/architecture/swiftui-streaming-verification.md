@@ -1,9 +1,9 @@
 # Carbon 1.0.0 — SwiftUI Streaming & UI Responsiveness Verification
 
-**Document Date:** 2026-10-28  
-**Author:** Google Antigravity (Primary Development Agent)  
-**Target Codebase:** `apps/macos/Carbon` ([CarbonClient.swift](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/CarbonClient.swift), [ContentView.swift](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/ContentView.swift))  
-**Status:** Implemented & Verified via Native Swift 6 Build  
+**Document Date:** 2026-10-28 *(historical snapshot; updated by Stage 5-D token coalescing & Stage 5-E/6.3 UI verification — see [verification-summary.md](../reports/verification-summary.md) and [end-to-end-latency-report.md](../benchmarks/end-to-end-latency-report.md))*<br>
+**Author:** Google Antigravity (Primary Development Agent)<br>
+**Target Codebase:** `apps/macos/Carbon` ([CarbonClient.swift](../../apps/macos/Carbon/Sources/CarbonClient.swift), [ContentView.swift](../../apps/macos/Carbon/Sources/ContentView.swift))<br>
+**Status:** Historical Oct 28 Verification *(superseded by Stage 5-D/5-E Swift tests)*
 
 ---
 
@@ -43,7 +43,7 @@ stateDiagram-v2
 
 ## 3. Implementation Code Review
 
-### 3.1 Data Model ([CarbonClient.swift:L4-L35](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/CarbonClient.swift#L4-L35))
+### 3.1 Data Model ([CarbonClient.swift:L4-L35](../../apps/macos/Carbon/Sources/CarbonClient.swift#L4-L35))
 The UI state structure cleanly encapsulates generation lifecycle without persisting raw reasoning text:
 ```swift
 public struct ChatDisplayMessage: Identifiable, Equatable {
@@ -58,14 +58,14 @@ public struct ChatDisplayMessage: Identifiable, Equatable {
 }
 ```
 
-### 3.2 Event Processing ([CarbonClient.swift:L116-L180](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/CarbonClient.swift#L116-L180))
+### 3.2 Event Processing ([CarbonClient.swift:L116-L180](../../apps/macos/Carbon/Sources/CarbonClient.swift#L116-L180))
 - **`task_created`:** Sets `isProcessing = true` on the assistant bubble for immediate feedback.
 - **`thinking`:** Intercepted; maintains `isProcessing = true` without modifying `message.text` or presenting a raw reasoning dump.
 - **`token`:** The arrival of the first visible character sets `isProcessing = false` and appends text directly to `message.text`.
 - **`cancelled`:** Sets `isStreaming = false`, `isProcessing = false`, and `isCancelled = true`.
 - **`failed`:** Sets `errorMessage = err` for prominent error styling.
 
-### 3.3 Visual Presentation ([ContentView.swift:L180-L235](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/ContentView.swift#L180-L235))
+### 3.3 Visual Presentation ([ContentView.swift:L180-L235](../../apps/macos/Carbon/Sources/ContentView.swift#L180-L235))
 In `MessageBubbleView`, the UI is rendered strictly according to the clean state pattern:
 1. **Error State:** Renders an alert box with red accent, icon `exclamationmark.triangle.fill`, and the sanitized error description.
 2. **Processing State:** If `message.text.isEmpty && (isProcessing || isStreaming)`, renders a compact `ProgressView().scaleEffect(0.7)` with `Text("Processing...")`.

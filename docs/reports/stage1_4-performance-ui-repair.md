@@ -23,8 +23,8 @@ During manual desktop end-to-end testing on Apple Silicon (MacBook Air M5, 16 GB
   - **STANDARD:** `think: True`, `num_predict: 2560`, `temperature: 0.6`, concise step-by-step reasoning prompt guidance. Resolves Java coding prompts in **67.9–82.4s** with 536–613 visible tokens of complete, production-grade code.
   - **DEEP:** `think: True`, `num_predict: 4096`, `temperature: 0.7`, focused multi-step reasoning prompt guidance to prevent circular logic loops. Resolves the 8-ball puzzle in **189.86s** with 421 tokens of structured logic.
 - **Engineered Native macOS SwiftUI Markdown & Math Typography System:**
-  - Created [`MarkdownRenderer.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/MarkdownRenderer.swift), implementing AST parsing (`MarkdownParser`) for H1–H6 headers, code blocks with one-click clipboard copying, bullet & numbered lists, GFM tables, dividers, blockquotes, and block math.
-  - Implemented [`MathFormatter`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/MarkdownRenderer.swift#L6-L173) for converting LaTeX mathematical syntax (superscripts, subscripts, Greek letters, square roots, fractions, relations) into clean Unicode typography.
+  - Created [`MarkdownRenderer.swift`](../../apps/macos/Carbon/Sources/MarkdownRenderer.swift), implementing AST parsing (`MarkdownParser`) for H1–H6 headers, code blocks with one-click clipboard copying, bullet & numbered lists, GFM tables, dividers, blockquotes, and block math.
+  - Implemented [`MathFormatter`](../../apps/macos/Carbon/Sources/MarkdownRenderer.swift#L6-L173) for converting LaTeX mathematical syntax (superscripts, subscripts, Greek letters, square roots, fractions, relations) into clean Unicode typography.
 - **Verification & Acceptance:** 71 automated pytest tests passed (52 unit, 8 security, 7 desktop connection, 4 integration). Swift test suite executed and passed with 0 warnings. Ruff linting verified at 0 errors.
 
 ---
@@ -89,7 +89,7 @@ else:
 ## 4. Native macOS SwiftUI Markdown & Math Typography System
 
 ### 4.1 Architecture Overview
-A complete rendering module was authored in [`apps/macos/Carbon/Sources/MarkdownRenderer.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/MarkdownRenderer.swift):
+A complete rendering module was authored in [`apps/macos/Carbon/Sources/MarkdownRenderer.swift`](../../apps/macos/Carbon/Sources/MarkdownRenderer.swift):
 
 ```mermaid
 flowchart TD

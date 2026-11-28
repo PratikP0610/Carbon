@@ -26,7 +26,7 @@ The 8 mandated ordinary factual queries were evaluated using the live `Intellige
 | **"Name three programming languages."** | `GENERAL_QUERY` | `standard` | `think: True` (`STANDARD`) | **Yes (Native Reasoning)** |
 
 ### Classification Rationale:
-In the current implementation ([`src/carbon/intelligence/engine.py:108-118`](file:///Users/pratikpradeshi/Carbon/src/carbon/intelligence/engine.py#L108-L118)), simple factual questions require **both** an interrogative prefix (`what is`, `who is`, `where is`, `when was`, etc.) **and** an explicit concise clause (`answer in one word`, `just the number`, `in one word`) to match Stage 5 fast-path lookup. Because none of the 8 queries above contain explicit concise-answer clauses, they fall through to default Stage 6: `GENERAL_QUERY` / `ReasoningDepth.STANDARD`.
+In the current implementation ([`src/carbon/intelligence/engine.py:108-118`](../../src/carbon/intelligence/engine.py#L108-L118)), simple factual questions require **both** an interrogative prefix (`what is`, `who is`, `where is`, `when was`, etc.) **and** an explicit concise clause (`answer in one word`, `just the number`, `in one word`) to match Stage 5 fast-path lookup. Because none of the 8 queries above contain explicit concise-answer clauses, they fall through to default Stage 6: `GENERAL_QUERY` / `ReasoningDepth.STANDARD`.
 
 ---
 
@@ -108,7 +108,7 @@ graph LR
 
 Empirical benchmarks were executed against Carbon's live WebSocket pipeline (`ws://127.0.0.1:8765/ws/chat`), with 3 warm repetitions per prompt. No manual reasoning overrides were passed, ensuring that tasks followed natural backend classification.
 
-All measurements were captured via high-resolution wall clocks and saved to [`docs/reports/stage1_2_factual_benchmark_results.json`](file:///Users/pratikpradeshi/Carbon/docs/reports/stage1_2_factual_benchmark_results.json).
+All measurements were captured via high-resolution wall clocks and saved to [`docs/reports/stage1_2_factual_benchmark_results.json`](stage1_2_factual_benchmark_results.json).
 
 ### 5.1 Empirical Results Summary
 

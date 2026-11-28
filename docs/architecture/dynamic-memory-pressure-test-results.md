@@ -1,6 +1,6 @@
 # Carbon 1.0.0 — Dynamic Memory Pressure & Switching Test Results
 
-**Document Date:** 2026-10-28  
+**Document Date:** 2026-10-28 *(historical Phase 0 simulated test snapshot; later extended by Stage 5-C ownership tokens & Stage 5-D Mach hooks — see [system-design.md](system-design.md) and [verification-summary.md](../reports/verification-summary.md))*
 **Author:** Google Antigravity (Primary Development Agent)  
 **Test Suite:** `tests/unit/test_memory_pressure_and_switching.py`  
 **Evaluation Mode:** Simulated Condition Unit Testing  

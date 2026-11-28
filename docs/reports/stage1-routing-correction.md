@@ -4,14 +4,14 @@
 **Date:** 2026-10-28  
 **Mode:** Controlled Implementation (IntelligenceEngine routing only)  
 **Milestone:** Carbon 1.0.0 — Phase 1  
-**Target File:** [`src/carbon/intelligence/engine.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/intelligence/engine.py)  
-**Test Suite:** [`tests/unit/test_routing_reliability.py`](file:///Users/pratikpradeshi/Carbon/tests/unit/test_routing_reliability.py)  
+**Target File:** [`src/carbon/intelligence/engine.py`](../../src/carbon/intelligence/engine.py)  
+**Test Suite:** [`tests/unit/test_routing_reliability.py`](../../tests/unit/test_routing_reliability.py)  
 
 ---
 
 ## 1. Executive Summary
 
-During the Stage 1 Post-Implementation Code Review ([`docs/reports/stage1-post-implementation-review.md`](file:///Users/pratikpradeshi/Carbon/docs/reports/stage1-post-implementation-review.md)), two non-fatal classifier edge cases were identified in `IntelligenceEngine`:
+During the Stage 1 Post-Implementation Code Review ([`docs/reports/stage1-post-implementation-review.md`](stage1-post-implementation-review.md)), two non-fatal classifier edge cases were identified in `IntelligenceEngine`:
 1. **Precedence Inversion:** `_instant_patterns` was evaluated before `_deep_patterns`, causing complex questions with concise-answer clauses (e.g. *"Solve this multi-step mathematical puzzle. Answer in one word."*) to be downgraded to `INSTANT` (`think: false`).
 2. **Arithmetic Word-Boundary Artifact:** The trailing `\b` in `^(calculate|compute|what is \d+[\s\+\-\*\/])\b` failed to match natural spaced arithmetic expressions (e.g. `"What is 37 + 58?"`) because space-to-operator is not a word boundary.
 
@@ -70,9 +70,9 @@ self._arithmetic_pattern = (
 
 | File Path | Component | Nature of Changes |
 | :--- | :--- | :--- |
-| [`src/carbon/intelligence/engine.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/intelligence/engine.py) | Production Classifier | Replaced heuristic pattern list with prioritized 6-stage classification pipeline. Added robust arithmetic regex and standard reasoning protection. |
-| [`tests/unit/test_routing_reliability.py`](file:///Users/pratikpradeshi/Carbon/tests/unit/test_routing_reliability.py) | New Test Suite | Added 6 comprehensive test functions validating 55+ distinct routing scenarios across whitespace, complexity, factual lookup, and orchestrator integration. |
-| [`tests/unit/test_inference_optimization.py`](file:///Users/pratikpradeshi/Carbon/tests/unit/test_inference_optimization.py) | Unit Test Maintenance | Cleaned mock callback signatures (`prompt`, `system`) and removed unused imports for 100% ruff compliance. |
+| [`src/carbon/intelligence/engine.py`](../../src/carbon/intelligence/engine.py) | Production Classifier | Replaced heuristic pattern list with prioritized 6-stage classification pipeline. Added robust arithmetic regex and standard reasoning protection. |
+| [`tests/unit/test_routing_reliability.py`](../../tests/unit/test_routing_reliability.py) | New Test Suite | Added 6 comprehensive test functions validating 55+ distinct routing scenarios across whitespace, complexity, factual lookup, and orchestrator integration. |
+| [`tests/unit/test_inference_optimization.py`](../../tests/unit/test_inference_optimization.py) | Unit Test Maintenance | Cleaned mock callback signatures (`prompt`, `system`) and removed unused imports for 100% ruff compliance. |
 
 ---
 

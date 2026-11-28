@@ -1,81 +1,60 @@
 # Carbon Permission & Autonomy Matrix Specification
 
-## 1. Five-Tier Permission Ladder (P0 – P4)
-
-Every capability, tool, and system interaction in Carbon is classified under an immutable permission tier reflecting its potential system impact and reversibility.
-
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                      PERMISSION TIER LADDER                            │
-├────┬─────────────────────────────┬────────────────────────────────────┤
-│ P0 │ Conversational              │ Read-only text, reasoning, facts   │
-├────┼─────────────────────────────┼────────────────────────────────────┤
-│ P1 │ Read Approved               │ System metrics, app listings       │
-├────┼─────────────────────────────┼────────────────────────────────────┤
-│ P2 │ Reversible Execution        │ Approved app launch, clipboard     │
-├────┼─────────────────────────────┼────────────────────────────────────┤
-│ P3 │ State Modification          │ File write, calendar, network      │
-├────┼─────────────────────────────┼────────────────────────────────────┤
-│ P4 │ Sensitive / Destructive     │ File deletion, Keychain, restarts  │
-└────┴─────────────────────────────┴────────────────────────────────────┘
-```
-
-### Detailed Classification Table:
-
-| Tier | Name | Reversibility | Impact Level | Confirmation Policy | Examples |
-|---|---|---|---|---|---|
-| **P0** | **Conversational** | Perfectly reversible | Zero system impact | Never required | Answering general questions, explaining concepts, parsing in-memory text. |
-| **P1** | **Read Approved** | Read-only | Zero modification | Auto-approved in A1–A3; manual in A0 | Reading CPU/RAM load, checking battery percentage, listing installed `/Applications`. |
-| **P2** | **Reversible Action** | Easily dismissed | Low impact | Auto-approved in A2/A3; single-click in A1 | Launching approved macOS apps (Safari, Notes, Calculator), copying text to clipboard. |
-| **P3** | **State Modification** | Permanent / Non-trivial | Moderate to High | **Always Requires Explicit Confirmation** | Modifying user files, creating calendar entries, making authorized HTTP requests. |
-| **P4** | **Sensitive / Destructive** | Irreversible / Critical | Severe | **Mandatory Double Confirmation or Hard Block** | Deleting files, modifying permissions, accessing macOS Keychain, executing system reboot. |
+**Stage 7.5 Alignment Status:** Aligned strictly to [models.py](../../src/carbon/interfaces/models.py), [governance_engine.py](../../src/carbon/governance/governance_engine.py), [orchestrator.py](../../src/carbon/core/orchestrator.py), [base.py](../../src/carbon/tools/base.py), and [builtin.py](../../src/carbon/tools/builtin.py).
 
 ---
 
-## 2. Autonomy Tiers (A0 – A3)
+## 1. Permission Tier Ladder (`P0` – `P4`) (`IMPLEMENTED`)
 
-The autonomy level dictates the default authorization behavior of Carbon Core when tools are requested by the model:
-
-```
-┌─────────┬──────────────────────┬─────────────┬─────────────┬─────────────┬─────────────┐
-│ Mode    │ Description          │ P0 Auto?    │ P1 Auto?    │ P2 Auto?    │ P3/P4 Auto? │
-├─────────┼──────────────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-│ **A0**  │ Observe Only         │ Manual      │ Manual      │ Manual      │ Manual      │
-│ **A1**  │ Assist & Recommend   │ **Yes**     │ Card Prompt │ Card Prompt │ Modal Prompt│
-│ **A2**  │ Execute Approved     │ **Yes**     │ **Yes**     │ **Yes**     │ Modal Prompt│
-│ **A3**  │ Bounded Autonomy     │ **Yes**     │ **Yes**     │ **Yes**     │ Bounded Auto│
-└─────────┴──────────────────────┴─────────────┴─────────────┴─────────────┴─────────────┘
-```
-
-- **A0 (Observe Only):** Carbon operates strictly in an advisory role. No tool executions are permitted without individual manual authorization.
-- **A1 (Assist & Recommend — Default):** P0 operations execute automatically. P1–P4 operations generate interactive approval cards in the UI.
-- **A2 (Execute Approved):** Carbon automatically executes benign read (P1) and reversible (P2) operations; immediately halts and prompts for any P3/P4 operation.
-- **A3 (Bounded Autonomy):** Carbon autonomously executes multi-step workflows across P0–P3 strictly within a pre-declared policy envelope (e.g. "Allowed to modify files strictly inside `~/Projects/Carbon`"). P4 is always blocked or double-confirmed.
+| Tier | Intent | Actual Auto-Approval Behavior (`authorize_action`) | Current Registered Built-Ins / Uses |
+| :--- | :--- | :--- | :--- |
+| **P0** | Conversational / zero side effects | Auto in `A1`, `A2`, `A3`; `False` in `A0` | None registered in `ToolRegistry` |
+| **P1** | Read local state | Requires approval in `A0`, `A1`; auto in `A2`, `A3` | `system_info`, `list_applications` (`timeout_seconds=5.0`) |
+| **P2** | Reversible local action | Requires approval in `A0`, `A1`; auto in `A2`, `A3` | `open_application` (`timeout_seconds=5.0`, allowlisted `APPROVED_APPS`) |
+| **P3** | Persistent state mutation | **Always returns `False`** (`A0`–`A3`); requires human `approval_id` | Procedural memory governance (`procedural_memory_write` approval gate) |
+| **P4** | Destructive / high-impact | **Always returns `False`** (`A0`–`A3`); not auto-authorizable | None registered (**PLANNED**) |
 
 ---
 
-## 3. Human-in-the-Loop Confirmation UI Contract
+## 2. Autonomy Matrix (`verified in GovernanceEngine.authorize_action()`)
 
-When a requested tool requires confirmation, Carbon Core transitions the task to `AWAITING_APPROVAL` and emits an event over the loopback WebSocket to the native SwiftUI frontend.
+| Autonomy Tier | `P0` | `P1` | `P2` | `P3` | `P4` | Code Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **`A0` (Observe Only)** | `False` | `False` | `False` | `False` | `False` | **IMPLEMENTED** |
+| **`A1` (Assist & Recommend, Default)** | **`True`** | `False` (Approval req.) | `False` (Approval req.) | `False` (Approval req.) | `False` (Approval req.) | **IMPLEMENTED** |
+| **`A2` (Execute Approved)** | **`True`** | **`True`** | **`True`** | `False` (Approval req.) | `False` (Approval req.) | **IMPLEMENTED** |
+| **`A3` (Bounded Autonomy)** | **`True`** | **`True`** | **`True`** | `False` (Approval req.) | `False` (Approval req.) | **PARTIALLY IMPLEMENTED** *(Identical to `A2`; scoped policy envelopes are **PLANNED**)* |
 
-### JSON Payload Schema:
+**Immutable Enforcement Notes:**
+- `Settings.autonomy_level` defaults to `"A1"` (`settings.py`).
+- `ToolRegistry.execute_tool()` enforces schema validation (`validate_tool_call`) before checking `consume_approval` or `authorize_action`, and defaults to `DENY` if governance or `autonomy_provider` is unconfigured (`tools/base.py`).
+- Pending approvals exist in memory (`GovernanceEngine._pending_approvals`), expire after `timeout_seconds` (`60.0s` default), bind via SHA-256 `arguments_digest`, and accept resolution only from `DecisionSource.USER_UI` or `DecisionSource.USER_API`.
+
+---
+
+## 3. Verified `"awaiting_approval"` WebSocket Payload Contract (`IMPLEMENTED`)
+
+Emitted by `CarbonCore.execute_task_stream()` (`orchestrator.py:1328-1339`) during the `"open <app>"` `SYSTEM_COMMAND` fast-path:
+
 ```json
 {
   "event": "awaiting_approval",
-  "task_id": "task-a1b2c3d4",
+  "approval_id": "apr-...",
+  "task_id": "task-...",
   "tool_id": "open_application",
   "permission_level": "P2",
-  "title": "Launch Application Request",
+  "title": "Open Application Request",
   "arguments": {
     "app_name": "Safari"
   },
-  "impact_summary": "Launches the Safari desktop web browser on macOS.",
+  "impact_summary": "Launch approved application 'Safari' on macOS.",
   "is_reversible": true,
   "timeout_seconds": 60.0
 }
 ```
 
-### UI Modal Behavior:
-1. **Visual Prominence:** P2 displays as an inline action card. P3/P4 display as a modal sheet requiring an explicit click on **"Approve"** or **"Deny"**.
-2. **Argument Inspection:** Parameters are displayed with syntax-highlighted JSON or visual file diffs.
-3. **Automatic Timeout:** If unapproved within 60 seconds, Carbon Core auto-cancels the action and resumes conversational execution.
+### Actual Client Behavior (`ContentView.swift` & `orchestrator.py`)
+
+1. **Presentation:** `ContentView` displays `approvalBannerView` inline above the composer showing `title`, `permissionLevel` pill (`orange` for `P0`–`P2`, `red` for `P3`–`P4`), `impactSummary`, `Tool: ... • Args: ...`, and **Deny** / **Approve** buttons.
+2. **Resolution:** Client sends `{"action": "approve" | "deny", "approval_id": "...", "task_id": "..."}` over `/ws/chat` (or `POST /api/v1/approvals/{approval_id}/decision`).
+3. **Timeout / Denial:** If unapproved after `60.0s` or denied, `CarbonCore` cancels the approval, sets `task.state = TaskState.CANCELLED`, yields `"approval_resolved"`, a notice `"token"`, and `"cancelled"`, and returns immediately without calling LLM inference.

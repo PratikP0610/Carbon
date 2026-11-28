@@ -1,5 +1,8 @@
 # Carbon Model Supervisor (CMS) — Lifecycle & Switching State Machine
 
+> [!NOTE]
+> **Stage 7.6 Alignment Notice:** This document reflects an early Oct 28 architectural design draft and contains superseded target claims (`Fair RWLock`, `asyncio.PriorityQueue`, `CHECKPOINTED`, `inference_timeout_seconds (60s)`). For verified current CMS and task-state behavior (`asyncio.Lock` + `_drain_event` leases, `POST /api/generate` via `generate_stream_events()`, `300.0s` default timeout, and no priority queue/`CHECKPOINTED` state), see [system-design.md](system-design.md), [data-flow.md](data-flow.md), [component-contracts.md](component-contracts.md), and [verification-summary.md](../reports/verification-summary.md).
+
 ## 1. Architectural Role and Authority
 
 The **Carbon Model Supervisor (CMS)** is the sole, unbypassable authority governing model registration, health monitoring, capability routing, inference lease management, and model lifecycle transitions in Carbon 1.0.0.

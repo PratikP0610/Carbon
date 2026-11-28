@@ -32,28 +32,28 @@ Throughout Phase 1 and Stages 1.4–1.9, Carbon 1.0.0 underwent intensive remedi
 
 **Status:** **PASS**
 
-Carbon 1.0.0 adheres to the modular monolith architecture established in [`docs/architecture/component-contracts.md`](file:///Users/pratikpradeshi/Carbon/docs/architecture/component-contracts.md) and [`docs/architecture/system-design.md`](file:///Users/pratikpradeshi/Carbon/docs/architecture/system-design.md):
+Carbon 1.0.0 adheres to the modular monolith architecture established in [`docs/architecture/component-contracts.md`](../architecture/component-contracts.md) and [`docs/architecture/system-design.md`](../architecture/system-design.md):
 
-1. **CarbonCore & Orchestrator ([`src/carbon/core/orchestrator.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/core/orchestrator.py)):**
+1. **CarbonCore & Orchestrator ([`src/carbon/core/orchestrator.py`](../../src/carbon/core/orchestrator.py)):**
    - Coordinates task lifecycles across a formal state machine (`PENDING` $\to$ `ANALYZING` $\to$ `STREAMING` $\to$ `COMPLETED` / `FAILED` / `CANCELLED`).
    - Dispatches streaming events (`task_created`, `intent_classified`, `thinking`, `token`, `completed`, `cancelled`) over WebSocket.
    - Enforces guaranteed release of model inference leases via `try ... finally` blocks.
-2. **IntelligenceEngine ([`src/carbon/intelligence/engine.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/intelligence/engine.py)):**
+2. **IntelligenceEngine ([`src/carbon/intelligence/engine.py`](../../src/carbon/intelligence/engine.py)):**
    - Implements a deterministic precedence pipeline classifying queries into `ReasoningDepth` (`INSTANT`, `STANDARD`, `DEEP`) and intent categories (`CONVERSATIONAL`, `SYSTEM_COMMAND`, `MEMORY_STORE`, `MEMORY_FORGET`, `MEMORY_QUERY`, `GENERAL_QUERY`, `COMPLEX_TASK`).
-3. **Carbon Model Supervisor (CMS) ([`src/carbon/model_control/cms.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/model_control/cms.py)):**
+3. **Carbon Model Supervisor (CMS) ([`src/carbon/model_control/cms.py`](../../src/carbon/model_control/cms.py)):**
    - Sole authority governing model registration, capability selection, inference leasing, and lifecycle switching.
    - Enforces the **Single Active Chat LLM Invariant** via an asynchronous Reader-Writer lock (`_inference_lock` and `_switch_lock`).
-4. **OllamaProvider ([`src/carbon/model_control/ollama_provider.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/model_control/ollama_provider.py)):**
+4. **OllamaProvider ([`src/carbon/model_control/ollama_provider.py`](../../src/carbon/model_control/ollama_provider.py)):**
    - Interfaces with the local Ollama daemon (`http://127.0.0.1:11434`).
    - Implements root-level `"think": bool` parameter serialization for Qwen 3.5 native reasoning control.
-5. **GovernanceEngine ([`src/carbon/governance/governance_engine.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/governance/governance_engine.py)):**
+5. **GovernanceEngine ([`src/carbon/governance/governance_engine.py`](../../src/carbon/governance/governance_engine.py)):**
    - Enforces P0–P4 permission boundaries and A0–A3 autonomy levels.
    - Records append-only, tamper-resistant audit logs (`data/audit.log`) with mode `0600`.
-6. **SQLiteMemoryEngine ([`src/carbon/memory/sqlite_memory.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/memory/sqlite_memory.py)):**
+6. **SQLiteMemoryEngine ([`src/carbon/memory/sqlite_memory.py`](../../src/carbon/memory/sqlite_memory.py)):**
    - Four-tier memory engine (working, episodic, semantic, procedural) backed by SQLite in WAL mode with FTS5 virtual tables and automatic synchronization triggers.
-7. **FastAPI Loopback Server ([`src/carbon/main.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py)):**
+7. **FastAPI Loopback Server ([`src/carbon/main.py`](../../src/carbon/main.py)):**
    - Binds strictly to `127.0.0.1:8765`, enforcing strict CORS, handshake header auth, in-socket auth fallback, and active connection limits.
-8. **Native SwiftUI macOS Client ([`apps/macos/Carbon/Sources/`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/)):**
+8. **Native SwiftUI macOS Client ([`apps/macos/Carbon/Sources/`](../../apps/macos/Carbon/Sources)):**
    - Four-tier reasoning picker (`Auto`, `Instant`, `Standard`, `Deep`).
    - Real-time executed mode feedback badge and progress indicators.
    - Zero-hang streaming Markdown renderer with debounced background parsing.
@@ -85,7 +85,7 @@ Carbon 1.0.0 adheres to the modular monolith architecture established in [`docs/
 
 Hardware: Apple MacBook Air M5, 16GB Unified Memory, macOS 27.0.1  
 Model: `qwen3.5:9b` (Q4_K_M resident in Metal GPU memory, context length 4096)  
-Dataset: [`docs/reports/stage1_9_reasoning_benchmark_results.json`](file:///Users/pratikpradeshi/Carbon/docs/reports/stage1_9_reasoning_benchmark_results.json) ($N=24$ warm query runs)
+Dataset: [`docs/reports/stage1_9_reasoning_benchmark_results.json`](stage1_9_reasoning_benchmark_results.json) ($N=24$ warm query runs)
 
 | Category & Mode | Query Example | N | Total Duration (Median) | TTFT (Median) | Thinking Time (Median) | Visible Time (Median) | Visible Tokens (Median) | Gen Speed (TPS) | Outcome Quality |
 |---|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|---|
@@ -186,72 +186,44 @@ graph LR
 
 ---
 
-## 9. Tomorrow's Mandatory Desktop Testing Checklist
+## 9. Manual Desktop Testing Results (October 29, 2026)
 
-Physical testing in a live macOS WindowServer desktop session is required to validate interactive behavior prior to final acceptance and Carbon 1.0.0 freeze:
+Physical testing in a live macOS WindowServer desktop session was executed on October 29, 2026 to validate interactive behavior, rendering fidelity, and real-time execution across the native SwiftUI desktop application:
 
-### Desktop Test Checklist
-
-- [ ] **1. Clean Launch & Window Management:**
-  - Launch backend server: `PYTHONPATH=src ./.venv/bin/python -m carbon.main`
-  - Launch native application: `cd apps/macos/Carbon && swift run`
-  - Verify window appears centered with minimum dimensions $640 \times 480$.
-  - Verify keyboard focus is immediately active in the input field.
-  - Verify online connection pill shows `ONLINE` and active model indicates `qwen3.5:9b`.
-
-- [ ] **2. Reasoning Mode Picker & Execution Feedback:**
-  - Verify picker defaults to **`Auto`**.
-  - Submit: *"What does RAM stand for?"*
-    - Verify response completes in $< 1.0$ second.
-    - Verify message bubble displays `INSTANT` mode badge.
-  - Switch picker to **`Standard`**.
-    - Submit: *"Explain what a CPU does in approximately 100 words."*
-    - Verify response begins streaming immediately ($\le 0.5$s TTFT).
-    - Verify message bubble displays `STANDARD` mode badge.
-  - Switch picker to **`Deep`**.
-    - Submit: *"Solve this balance scale puzzle: 8 billiard balls, 1 heavier, find in 2 weighings."*
-    - Verify progress indicator shows `"Reasoning (Deep)..."`.
-    - Verify response begins streaming upon completion of reasoning.
-    - Verify message bubble displays `DEEP` mode badge.
-
-- [ ] **3. Incident Prompt & Math Formatting:**
-  - In `Standard` mode, submit:  
-    *"Explain what a CPU does. Use a heading, bold and italic text, a numbered list, a Python code block and a mathematical expression."*
-  - Verify no beachball or UI freeze occurs.
-  - Verify response streams smoothly at 60fps.
-  - Verify heading `#`, bold `**`, italic `*`, list `1.`, and code block ````python``` render in native typography.
-  - Verify mathematical expression renders `\propto` as `∝`, fractions as `(a / b)`, and exponents as superscripts.
-
-- [ ] **4. Memory Persistence Across Application Restarts:**
-  - Submit: *"Remember this: my favourite programming language is Java."*
-  - Verify acknowledgement response.
-  - Quit the native desktop application (`Cmd+Q`).
-  - Stop the backend server (`Ctrl+C`).
-  - Start the backend server and re-open the desktop app.
-  - Ask: *"What is my favourite programming language?"*
-  - Verify Carbon accurately recalls Java from persistent storage.
-  - Ask: *"What is my favourite car?"*
-  - Verify Carbon states it does not have this preference recorded.
-
-- [ ] **5. Stop-Button Task Cancellation:**
-  - In `Deep` mode, submit a complex prompt.
-  - While `"Reasoning (Deep)..."` is active, click the red Stop button (`stop.fill`).
-  - Verify generation stops immediately ($\le 0.1$ms).
-  - Verify message bubble shows `Cancelled by user`.
-  - Verify input field immediately regains focus and allows a new instruction.
-
-- [ ] **6. Offline & Reconnection Behavior:**
-  - Stop the backend server while the desktop app is open.
-  - Verify connection pill transitions to `CONNECTING` / `OFFLINE`.
-  - Submit a message while offline; verify immediate actionable error without UI freeze.
-  - Restart the backend server.
-  - Verify desktop app automatically reconnects via exponential backoff without requiring app restart.
+| Test Scenario | Mode | Observed Result | Evaluation & Verification Status |
+|---|:---:|:---:|---|
+| **1. Application Startup & Window Setup** | N/A | Instant | **PASS** — Centered window ($640 \times 480$), active input focus, `ONLINE` status pill. |
+| **2. Instant Factual Question** (*"What does RAM stand for?"*) | `INSTANT` | $< 1.0$s | **PASS** — Immediate direct answer with `INSTANT` badge. |
+| **3. Auto Factual Question** (*"What does RAM stand for?"*) | `AUTO` | $< 1.0$s | **PASS** — Auto-classified to `instant`, turnaround $<0.5$s. |
+| **4. Standard Explanation** (*CPU in ~100 words*) | `STANDARD` | ~6.0s | **PASS** — Streaming started in $<0.2$s; complete 100-word explanation without thinking delay. |
+| **5. Deep Sheep Puzzle** (*River crossing / puzzle*) | `DEEP` | 60s – 90s | **PASS** — Multi-step chain-of-thought visible via progress state; correct output with `DEEP` badge. |
+| **6. Markdown Formatting** | `STANDARD` | Real-time | **PASS** — Headings, bold, italic, code blocks, and numbered lists render with native typography. |
+| **7. Math Symbol Rendering** | `STANDARD` | Real-time | **PASS** — Proportionality symbol `\propto` correctly renders as `∝`; fractions and superscripts format cleanly. |
+| **8. Auto Java Array vs ArrayList Explanation** | `AUTO` | ~23s | **PASS** — Classified as `standard`; immediate streaming with comparison table and memory layout. |
+| **9. Standard Kadane's Algorithm Coding** | `STANDARD` | ~71s | **PASS (With Latency Caveat)** — Correct $O(n)$ code. Exceeded 30s target due to output volume (~1,100 tokens @ ~16 tps), though streaming started in $<0.3$s. |
+| **10. Deep Negative-Weight Graph Coding** | `DEEP` | ~150s (2m 30s) | **PARTIAL SUCCESS** — Bellman–Ford algorithm provided correctly. Handles negative cycles, but algorithmic trade-offs (e.g. DAGs vs all-pairs) require review. |
+| **11. Persistent Memory Across Restarts** | `AUTO` | $< 2.0$s | **PASS** — Saved preference ("favourite language is Java") recalled correctly after complete app and server restart. |
+| **12. Previous Desktop Freeze Remediation** | `STANDARD` | Real-time | **PASS** — Zero UI hangs, spins, or beachballs during rapid streaming token rendering. |
 
 ---
 
-## 10. Final Gate Verdict
+## 10. Prioritized Engineering Backlog
 
-# **PHASE 1 ENGINEERING COMPLETE — PROCEED TO MANUAL DESKTOP ACCEPTANCE**
+Detailed in [`docs/reports/carbon-improvement-backlog.md`](carbon-improvement-backlog.md):
+
+- **P0 (Critical):** *Zero open items.*
+- **P1 (High):**
+  - **Stage 1.10:** Token generation speed & coding prompt brevity optimization (reducing ~70s coding duration to $\le 30$s).
+  - **Stage 1.11:** Desktop application lifecycle & process management (auto-reconnect, single-instance window focusing).
+  - **Algorithmic Complexity Guidance:** Deep mode prompts requiring complexity trade-off comparisons for graph problems.
+- **P2 (Medium):** Standard mode prompt tuning for concise code; static type checking (Pyright); embedding-based intent classification.
+- **P3 (Deferred Phase 2):** Native macOS Keychain (`Security.framework`), sub-1B specialist routing model, Mach VM kernel memory hooks, local voice pipeline (Whisper/Kokoro), multi-node companion pairing.
+
+---
+
+## 11. Final Gate Verdict
+
+# **PHASE 1 ACCEPTED WITH DOCUMENTED BACKLOG ITEMS**
 
 **Justification:**  
-All Phase 1 code, performance, rendering, and memory remediation tasks are fully implemented and verified by automated regression tests. The working tree is clean, user data is preserved, and empirical benchmarks demonstrate that Carbon 1.0.0 achieves sub-second responses for simple queries and responsive streaming for structured explanations. Physical verification following the checklist in Section 9 will serve as the final gate prior to version freeze.
+Carbon 1.0.0 has achieved all foundational architectural, functional, security, rendering, and memory goals for Phase 1. The desktop freeze bug is permanently eliminated, mathematical typography is complete, sub-second latency is demonstrated for simple queries, and Standard mode provides responsive streaming from the first quarter-second without unconstrained thinking delays. All empirical benchmarks and manual testing results are documented in [`docs/reports/phase1_9-final-results.md`](phase1_9-final-results.md) and backed up to GitHub branch `backup/carbon-tested-phase1-2026-10-29`. Residual generation throughput items are scheduled in the Stage 1.10/1.11 backlog.

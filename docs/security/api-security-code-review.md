@@ -1,154 +1,70 @@
-# Carbon 1.0.0 — API Security Implementation Code Review
+# Carbon — API Security Implementation Code Review
 
-**Document Date:** 2026-10-28  
-**Author:** Google Antigravity (Primary Development Agent)  
-**Target Codebase:** `src/carbon` ([main.py](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py), [logging.py](file:///Users/pratikpradeshi/Carbon/src/carbon/core/logging.py), [settings.py](file:///Users/pratikpradeshi/Carbon/src/carbon/config/settings.py))  
-**Status:** Complete Security Code Audit & Line-by-Line Inspection  
+**Stage 7.5 Alignment Status:** Updated against [main.py](../../src/carbon/main.py) (1,187 lines), [logging.py](../../src/carbon/core/logging.py) (129 lines), and [settings.py](../../src/carbon/config/settings.py) (251 lines).
 
 ---
 
-## 1. Summary of Code Review Findings
+## 1. Summary of Verified Security Mechanisms
 
-All 7 security areas were systematically inspected against the actual implementation:
-
-| Security Vector | Implementation Mechanism | Code Reference | Review Verdict |
+| Security Control | Verified Mechanism | Code Reference | Status |
 | :--- | :--- | :--- | :--- |
-| **REST Auth Coverage** | `verify_local_auth` dependency applied to all sensitive endpoints | [main.py:L140-L270](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py#L140-L270) | **100% Covered** |
-| **WebSocket Handshake Auth** | HTTP Upgrade `Authorization: Bearer <token>` validated prior to accept | [main.py:L305-L310](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py#L305-L310) | **Hardened (No Query-String)** |
-| **In-Socket Auth Timeout** | Bounded fallback with `asyncio.wait_for(..., timeout=3.0)` | [main.py:L315-L344](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py#L315-L344) | **3.0s Strict Timeout** |
-| **Connection-Limit Cleanup** | Capped at 5 connections; decremented in guaranteed `finally:` block | [main.py:L278, L294, L400](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py#L278) | **Reliable Decrement** |
-| **Token Rotation** | `POST /api/v1/auth/rotate-token` atomically writes `0600` file | [main.py:L240-L265](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py#L240-L265) | **Atomic & Immediate** |
-| **Log Credential Exposure** | `TokenSanitizingFilter` regex masking; access loggers dampened | [logging.py:L18-L45](file:///Users/pratikpradeshi/Carbon/src/carbon/core/logging.py#L18-L45) | **Redacted (`[REDACTED_TOKEN]`)** |
-| **Backend Restart Behavior** | Reads existing token file or generates new `0600` secret on boot | [main.py:L51-L78](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py#L51-L78) | **Deterministic & Persistent** |
+| **HTTP Loopback & Origin Middleware** | Rejects non-loopback `request.client.host` (`ALLOWED_CLIENT_HOSTS`) and unauthorized/`null` `Origin` with `403` | `main.py:226-258` | **IMPLEMENTED** |
+| **REST Bearer Auth Coverage** | `verify_local_auth` (`secrets.compare_digest`) applied to `22` of `24` REST routes (`/` and `/api/v1/health` are public) | `main.py:259-294` | **IMPLEMENTED** *(See test-mode fallback note)* |
+| **WebSocket Handshake & Query Removal** | Upgrade `Authorization: Bearer` validated before `accept()`; no `token` query parameter exists | `main.py:866-907` | **IMPLEMENTED** |
+| **In-Socket Auth Timeout** | Bounded `asyncio.wait_for(..., timeout=3.0)` waiting for `{"action": "auth", "token": ...}`, else closes `4401` | `main.py:864, 911-948` | **IMPLEMENTED** |
+| **WebSocket Origin & Cap** | Checks `Origin` before `accept()` (`1008`); caps `active_ws_connections` at `5` (`1013`), decrements in `finally:` | `main.py:862-882, 950, 1159-1163` | **IMPLEMENTED** |
+| **Token Storage & Rotation** | `_persist_token_atomic` writes `0600` temp file + atomic `.replace`; `/api/v1/auth/rotate-token` immediately closes stale WS sessions (`4401`) | `main.py:130-144, 307-339, 1063-1074` | **IMPLEMENTED** *(Keychain **DEFERRED**)* |
+| **Log & Audit Sanitization** | `TokenSanitizingFilter` + `sanitize_structured_data` redact tokens, credentials, prompts, and memory content | `logging.py:9-95, 121` | **IMPLEMENTED** |
 
 ---
 
-## 2. Line-by-Line Security Code Inspection
+## 2. Line-by-Line Inspection Notes
 
-### 2.1 REST Authentication Coverage
-- **Inspection Target:** [main.py:L140-L270](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py#L140-L270)
-- **Implementation:**
-  ```python
-  async def verify_local_auth(credentials: HTTPAuthorizationCredentials | None = Security(security)):
-      expected_token = getattr(app.state, "api_token", None)
-      if not expected_token:
-          return "unauthenticated-dev-mode"
-      if not credentials or credentials.scheme.lower() != "bearer":
-          raise HTTPException(
-              status_code=401, detail="Invalid or missing authentication scheme. Bearer required."
-          )
-      if not secrets.compare_digest(credentials.credentials, expected_token):
-          raise HTTPException(
-              status_code=401, detail="Invalid or expired local authentication token."
-          )
-      return credentials.credentials
-  ```
-- **Coverage Audit:**
-  - `GET /` — Public (root diagnostic).
-  - `GET /api/v1/health` — Public (liveness check).
-  - `GET /api/v1/models` — **Protected** (`Depends(verify_local_auth)`).
-  - `POST /api/v1/models/switch` — **Protected** (`Depends(verify_local_auth)`).
-  - `POST /api/v1/tasks` — **Protected** (`Depends(verify_local_auth)`).
-  - `GET /api/v1/tasks/{task_id}` — **Protected** (`Depends(verify_local_auth)`).
-  - `POST /api/v1/tasks/{task_id}/cancel` — **Protected** (`Depends(verify_local_auth)`).
-  - `GET /api/v1/tools` — **Protected** (`Depends(verify_local_auth)`).
-  - `POST /api/v1/tools/{tool_name}/execute` — **Protected** (`Depends(verify_local_auth)`).
-  - `POST /api/v1/auth/rotate-token` — **Protected** (`Depends(verify_local_auth)`).
-  - `GET /api/v1/system/status` — **Protected** (`Depends(verify_local_auth)`).
-- **Finding:** Zero unauthorized bypass routes exist for sensitive resources. Constant-time comparison (`secrets.compare_digest`) prevents timing attacks.
+### 2.1 REST Authentication (`main.py:259-275` & Routes `281-858`)
 
-### 2.2 WebSocket Handshake Authentication & Query-String Removal
-- **Inspection Target:** [main.py:L281-L314](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py#L281-L314)
-- **Elimination of Query-String Tokens:** The endpoint signature is strictly `async def websocket_chat_endpoint(websocket: WebSocket)`. The `token: str | None = Query(default=None)` parameter was completely removed. Passing `?token=...` has no authentication effect.
-- **Handshake Header Validation:**
-  ```python
-  auth_header = websocket.headers.get("authorization")
-  if auth_header and auth_header.startswith("Bearer "):
-      if secrets.compare_digest(auth_header[7:].strip(), expected_token):
-          authenticated = True
-  ```
-- **Finding:** Handshake authentication is validated before WebSocket acceptance, preventing socket allocation for unauthorized requests with headers.
+`verify_local_auth` compares `HTTPAuthorizationCredentials.credentials` in constant time (`_constant_time_token_matches` -> `secrets.compare_digest`) against `app.state.api_token`:
 
-### 2.3 In-Socket Authentication Timeout
-- **Inspection Target:** [main.py:L314-L344](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py#L314-L344)
-- **Implementation:**
-  ```python
-  if not authenticated and expected_token:
-      try:
-          auth_data = await asyncio.wait_for(
-              websocket.receive_text(),
-              timeout=WS_AUTH_TIMEOUT_SECONDS,  # 3.0 seconds
-          )
-          auth_payload = json.loads(auth_data)
-          if auth_payload.get("action") == "auth" and secrets.compare_digest(
-              auth_payload.get("token", ""), expected_token
-          ):
-              authenticated = True
-              await websocket.send_json({"event": "authenticated"})
-          else:
-              await websocket.close(code=4401)
-              return
-      except Exception:
-          await websocket.close(code=4401)
-          return
-  ```
-- **Finding:** Unauthenticated connections are strictly bounded to 3.0 seconds. Malicious or slow-loris clients attempting to hold sockets open in quarantine are automatically terminated.
+```python
+async def verify_local_auth(
+    auth: HTTPAuthorizationCredentials | None = Security(security_scheme),
+) -> bool:
+    expected_token = getattr(app.state, "api_token", None)
+    if not expected_token:
+        return True
+    if (
+        not auth
+        or auth.scheme.lower() != "bearer"
+        or not _constant_time_token_matches(auth.credentials, expected_token)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing local authorization token.",
+        )
+    return True
+```
 
-### 2.4 Connection-Limit Cleanup
-- **Inspection Target:** [main.py:L278, L294, L400](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py#L278)
-- **Enforcement:**
-  ```python
-  if active_ws_connections >= MAX_CONCURRENT_WS_CONNECTIONS:  # 5 max
-      await websocket.close(code=status.WS_1013_TRY_AGAIN_LATER)
-      return
-  ...
-  active_ws_connections += 1
-  try:
-      ...
-  finally:
-      active_ws_connections = max(0, active_ws_connections - 1)
-  ```
-- **Finding:** Sockets that fail during handshake, fail during in-socket auth, disconnect cleanly, or error out always hit the `finally:` block, preventing counter drift and connection exhaustion.
+- **Auth fallback caveat:** When `app.state.api_token` is `None`/falsy (such as ASGI test harnesses constructed without FastAPI `lifespan`), `verify_local_auth` returns `True`. Under normal `lifespan` startup (`main.py:199-200`), `_get_or_create_token()` always sets `app.state.api_token`.
+- **Full route inventory:** All `24` REST routes (`2` public + `22` protected) are catalogued in [api-reference.md](../api-reference.md). Note that `POST /api/v1/system/memory-pressure` (`main.py:566-574`) and `POST /api/v1/system/shutdown` (`main.py:615-621`) also perform explicit handler-level `request.client.host` loopback checks in addition to middleware.
 
-### 2.5 Token Rotation
-- **Inspection Target:** [main.py:L240-L265](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py#L240-L265)
-- **Implementation:**
-  ```python
-  new_token = secrets.token_urlsafe(32)
-  token_path = settings.data_dir / ".carbon_token"
-  temp_path = settings.data_dir / f".carbon_token.{secrets.token_hex(4)}.tmp"
-  with open(temp_path, "w", encoding="utf-8") as f:
-      f.write(new_token)
-  os.chmod(temp_path, 0o600)
-  temp_path.replace(token_path)
-  app.state.api_token = new_token
-  ```
-- **Finding:** Rotation uses atomic file replacement (`temp_path.replace(token_path)`) and immediately updates `app.state.api_token`. The old token is invalidated immediately for all subsequent calls.
+### 2.2 WebSocket `/ws/chat` Hardening (`main.py:862-1163`)
 
-### 2.6 Credential Exposure in Logs
-- **Inspection Target:** [logging.py:L18-L45](file:///Users/pratikpradeshi/Carbon/src/carbon/core/logging.py#L18-L45)
-- **Filter Implementation:**
-  ```python
-  class TokenSanitizingFilter(logging.Filter):
-      PATTERNS = [
-          (re.compile(r"Bearer\s+[a-zA-Z0-9_\-\.]{16,}", re.IGNORECASE), "Bearer [REDACTED_TOKEN]"),
-          (re.compile(r"(['\"]token['\"]\s*:\s*['\"])[^'\"]+(['\"])"), r"\1[REDACTED_TOKEN]\2"),
-          (
-              re.compile(r"(['\"]password['\"]\s*:\s*['\"])[^'\"]+(['\"])"),
-              r"\1[REDACTED_CREDENTIAL]\2",
-          ),
-      ]
-  ```
-- **Finding:** Even if an internal component logs an exception containing authentication data, the sanitizing filter intercepts and redacts credentials before stdout/file persistence.
+- **Important Starlette behavior:** `@app.middleware("http")` (`loopback_security_middleware`) intercepts HTTP requests only and **does not run on WebSocket upgrades**.
+- Inside `websocket_chat_endpoint`, `main.py` directly checks `Origin` against `settings.allowed_origins` (`http://127.0.0.1:<port>` and `http://localhost:<port>`, blocking external origins and `Origin: null` with code `1008`) and enforces `MAX_CONCURRENT_WS_CONNECTIONS = 5` (`1013`) before `websocket.accept()`.
+- Query-string `?token=...` is ignored. Authentication requires either `Authorization: Bearer <token>` on upgrade or `{"action": "auth", "token": "<token>"}` within `WS_AUTH_TIMEOUT_SECONDS = 3.0`, otherwise closing with code `4401`.
 
-### 2.7 Backend Restart Behavior
-- **Inspection Target:** [main.py:L51-L78](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py#L51-L78)
-- **Implementation:**
-  On startup, `lifespan` invokes `_get_or_create_token()`. It checks for an existing `data/.carbon_token` file. If present and non-empty, it loads it into memory. If absent, it generates a new 256-bit token, writes it with mode `0600`, and sets `app.state.api_token`.
-- **Finding:** Restarts are seamless; existing authorized clients can reconnect without token re-generation unless explicit rotation was triggered.
+### 2.3 Token Persistence & Immediate WebSocket Revocation (`main.py:130-185, 307-339`)
+
+- Token resolution prefers `settings.api_token` (`CARBON_API_TOKEN`); otherwise reads/creates `settings.token_file_path` (default `data/.carbon_token`) with mode `0o600` using `os.open(..., 0o600)`, `os.chmod(..., 0o600)`, and atomic `temp_path.replace(token_path)`.
+- `POST /api/v1/auth/rotate-token` issues a new 32-byte URL-safe token, updates `app.state.api_token`, and iterates `authenticated_sockets` to send `{"event": "error", "message": "Authentication token rotated. Re-authentication required."}` and immediately close stale sockets with code `4401` (no 30-second grace period). Each incoming WebSocket action (`main.py:1064-1074`) also verifies `session_token` against `app.state.api_token`.
+
+### 2.4 Credential & Content Redaction (`logging.py:9-95, 121-129`)
+
+- `configure_logging()` attaches `TokenSanitizingFilter` to stdout logging, masking `Bearer ...`, `'token': ...`, `'password': ...`, `token=...`, `api_key`, `secret`, and `authorization`, and sets `uvicorn.access`, `httpcore`, and `httpx` to `WARNING`.
+- `sanitize_structured_data()` recursively redacts `REDACTED_KEY_TOKENS` (including `token`, `password`, `secret`, `prompt`, `raw_prompt`, `content`, `memory_content`, `query`) before `audit.log` persistence.
 
 ---
 
-## 3. Conclusion
+## 3. Remaining Security Gaps
 
-The Carbon local API implementation exhibits zero known unauthorized access vectors, enforces strict loopback origin boundaries, completely eliminates query-string authentication, and bounds unauthenticated socket lifetimes.
+- **Keychain Deferral (`ADR-0007`):** Token storage uses `CARBON_API_TOKEN` or POSIX `0600` `.carbon_token`, which does not isolate secrets from other processes under the same macOS UID.
+- **Unverified REST Tests:** `POST /api/v1/tasks/{task_id}/cancel`, `GET /api/v1/tools`, `GET /api/v1/system/status` lack direct REST assertions in `tests/`, and `GET /api/v1/approvals` only has an unauthenticated `401` check in `tests/`.

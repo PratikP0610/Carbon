@@ -6,7 +6,7 @@
 **Backend:** FastAPI `127.0.0.1:8765`, Ollama `127.0.0.1:11434` (`qwen3.5:9b Q4_K_M`)  
 **Context Window:** 4096 tokens  
 **Benchmark Scope:** 24 warm queries across 8 suites (AUTO, INSTANT, STANDARD, DEEP)  
-**Machine-Readable Dataset:** [`docs/reports/stage1_9_reasoning_benchmark_results.json`](file:///Users/pratikpradeshi/Carbon/docs/reports/stage1_9_reasoning_benchmark_results.json)  
+**Machine-Readable Dataset:** [`docs/reports/stage1_9_reasoning_benchmark_results.json`](stage1_9_reasoning_benchmark_results.json)  
 
 ---
 
@@ -32,9 +32,9 @@ In Stage 1.9:
 
 ### 2.1 Backend Contract & Routing (`src/carbon/`)
 
-- **Model Normalization ([`src/carbon/interfaces/models.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/interfaces/models.py)):**  
+- **Model Normalization ([`src/carbon/interfaces/models.py`](../../src/carbon/interfaces/models.py)):**  
   Added a Pydantic `field_validator` on `TaskRequest.reasoning_override` that normalizes `"auto"`, `"AUTO"`, `""`, and `None` into `None`. Case-insensitive string values (`"instant"`, `"standard"`, `"deep"`) normalize to their respective `ReasoningDepth` enum instances.
-- **Orchestration Execution ([`src/carbon/core/orchestrator.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/core/orchestrator.py)):**
+- **Orchestration Execution ([`src/carbon/core/orchestrator.py`](../../src/carbon/core/orchestrator.py)):**
   - When `task.reasoning_override is None` (`AUTO` mode), `task.reasoning_depth` is assigned directly from `intent.reasoning_depth` determined by `IntelligenceEngine`.
   - When an explicit user override is provided (`INSTANT`, `STANDARD`, `DEEP`), it is strictly respected.
   - **`STANDARD` Configuration:**
@@ -57,18 +57,18 @@ In Stage 1.9:
         }
     ```
   - Emits `intent_classified` event with `category` and executed `reasoning_depth` over WebSocket.
-- **WebSocket Protocol ([`src/carbon/main.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/main.py)):**
+- **WebSocket Protocol ([`src/carbon/main.py`](../../src/carbon/main.py)):**
   - The WebSocket endpoint passes payload `reasoning` through `TaskRequest`, sending `reasoning_mode` in `task_created` and notifying the UI immediately.
 
 ### 2.2 Native macOS Desktop Client (`apps/macos/Carbon/Sources/`)
 
-- **Default Selection ([`CarbonClient.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/CarbonClient.swift)):**  
+- **Default Selection ([`CarbonClient.swift`](../../apps/macos/Carbon/Sources/CarbonClient.swift)):**  
   `@Published public var reasoningDepth: String = "auto"`. All new sessions default to `AUTO`.
-- **Picker UI ([`ContentView.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/ContentView.swift)):**  
+- **Picker UI ([`ContentView.swift`](../../apps/macos/Carbon/Sources/ContentView.swift)):**  
   Segmented picker offers four choices: `Auto`, `Instant`, `Standard`, and `Deep` with a width of 280pt.
-- **State Feedback ([`ContentView.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/ContentView.swift)):**  
+- **State Feedback ([`ContentView.swift`](../../apps/macos/Carbon/Sources/ContentView.swift)):**  
   Assistant messages capture `executedReasoningDepth` from `intent_classified` events. In `MessageBubbleView`, a small monospaced tag (`INSTANT`, `STANDARD`, or `DEEP`) is displayed on completed responses, and the progress text dynamically reflects the mode (`"Responding..."` for Instant, `"Reasoning (Deep)..."` for Deep).
-- **Proportionality Formatting ([`MarkdownRenderer.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/MarkdownRenderer.swift)):**  
+- **Proportionality Formatting ([`MarkdownRenderer.swift`](../../apps/macos/Carbon/Sources/MarkdownRenderer.swift)):**  
   Added `("\\propto", "∝")` to `MathFormatter.symbolReplacements`. Expressions such as `f \propto \frac{1}{T}` format cleanly as `f ∝ (1 / T)`.
 
 ---

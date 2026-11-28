@@ -5,7 +5,7 @@
 **Backend:** FastAPI `127.0.0.1:8765`, Ollama `127.0.0.1:11434` (`qwen3.5:9b Q4_K_M`)  
 **Context Window:** 4096 tokens  
 **Benchmark Scope:** 23 completed warm queries across 5 categories (A: N=5, B: N=5, C: N=5, D: N=5, E: N=3 [Partial])  
-**Machine-Readable Data:** [`docs/reports/stage1_8_latency_benchmark_results.json`](file:///Users/pratikpradeshi/Carbon/docs/reports/stage1_8_latency_benchmark_results.json)  
+**Machine-Readable Data:** [`docs/reports/stage1_8_latency_benchmark_results.json`](stage1_8_latency_benchmark_results.json)  
 
 ---
 

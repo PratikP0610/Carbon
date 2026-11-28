@@ -1,61 +1,43 @@
 # Carbon Performance Benchmark Methodology
 
-## 1. Objectives & Hardware Baseline
-
-Performance is a first-class product requirement for Carbon 1.0.0. The goal of this benchmark methodology is to measure, validate, and prevent regressions in inference latency, orchestration overhead, memory retrieval speed, and system resource pressure on Apple Silicon macOS hardware.
-
-### Hardware Baseline
-- **Device:** Apple MacBook Air M5 (Apple Silicon ARM64)
-- **Unified Memory:** 16 GB Unified Memory
-- **Operating System:** macOS (macOS 14+ / 27+)
-- **Model Runtime:** Ollama (v0.33+) with `qwen3.5:9b` (Q4_K_M GGUF, ~6.55 GB)
+**Stage 7.5 Alignment Status:** Aligned to verified benchmark scripts, CI performance gates, and [metrics.py](../../src/carbon/core/metrics.py).
 
 ---
 
-## 2. Key Metrics & Statistical Distributions
+## 1. Benchmark Tiers & Strict Separation Rules
 
-In accordance with Phase 0 revisions, all benchmark observations must be derived from repeated runs (N ≥ 5 for inference, N ≥ 50 for micro-benchmarks) and reported as a statistical distribution:
-- **Minimum (Min)**
-- **Median (P50)**
-- **95th Percentile (P95)**
-- **Maximum (Max)**
+To avoid mixing synthetic mock timings with live Apple Silicon LLM runs, Carbon separates performance evidence cleanly into three tiers:
 
-| Metric | Measurement Scope | PRD Target | Statistical Reporting |
-|---|---|---|---|
-| **Cold Model Load Time** | Disk APFS → Metal Unified Memory allocation | Baseline tracked | Single cold observation post `keep_alive: 0` |
-| **Simple Request TTFT** | Time-To-First-Token on warm simple prompt (e.g., status, basic math) | **P95 ≤ 2.0s** | Min, Median, P95, Max |
-| **Standard Request TTFT** | Time-To-First-Token on 50-token input prompt | **P95 ≤ 4.0s** | Min, Median, P95, Max |
-| **Generation Throughput** | Output tokens generated per second (`eval_count / eval_duration`) | ≥ 15 tok/s | Min, Median, P95, Max |
-| **Total Turnaround Latency**| Total request execution time from dispatch to final token | Task-dependent | Min, Median, P95, Max |
-| **Model Switching Time** | Explicit unload of active model + load of target model | ≤ 6.0s cold | Repeated switch iterations |
-| **Core Orchestration Overhead**| Core pipeline delay (intent, governance, validation) excluding LLM | **P95 ≤ 50ms** | Min, Median, P95, Max |
-| **Host Memory Pressure** | Mach kernel pressure level during peak inference | Level 1 (Normal) | Sampled before, during, and after inference |
+| Tier | Environment & Provider | What It Measures | Current Status |
+| :--- | :--- | :--- | :--- |
+| **Tier 1 (Deterministic CI / Unit Harnesses)** | `FakeProvider`, isolated temp SQLite DBs, SwiftUI/Markdown unit coordinators | Orchestration dispatch, model switch routing overhead, WS E2E framing overhead, SQLite 1k-row queries, stream teardown/cancellation cleanup, concurrency chaos, UI flush & Markdown rates | **IMPLEMENTED** (Stage 5-E Tier 1 baseline accepted) |
+| **Tier 2 (Live Local Ollama Inference)** | Local Ollama (`127.0.0.1:11434`, `qwen3.5:9b`) | Cold load, TTFR, TTFT_resp, `eval_count / eval_duration`, turnaround time | **Historical baseline** (Oct 28, `N=100` & clean runs); **UNVERIFIED** for Stage 5+/6.9-F builds |
+| **Tier 3 (Sustained Hardware / Stress / Soak)** | Live hardware under multi-hour / real Mach kernel memory pressure | Thermal stability, real kernel OOM/pressure recovery, extended soak | **UNVERIFIED / Unauthorized** |
+
+> [!IMPORTANT]
+> Tier 1 results validate regression gates on backend/UI plumbing only. They **do not** constitute live LLM inference measurements or proof of production-scale hardware performance.
 
 ---
 
-## 3. Real-World Testing Conditions
+## 2. Verified Hardware Baseline & Statistical Method
 
-To ensure benchmarks reflect actual user environments rather than synthetic isolation, tests must be conducted under **Normal macOS Operational Workloads**:
-1. **Background User Applications Active:** macOS desktop session running standard developer applications (browser with multiple active tabs, terminal windows, code editor, background sync daemons).
-2. **Unified Memory Baseline:** Document initial memory state (`vm_stat`, `sysctl kern.memorystatus_vm_pressure_level`, swap allocation).
-3. **Thermal State:** Monitor thermal throttling indicators (`pmset -g therm`) to verify Apple Silicon is operating without passive thermal throttling penalties.
-4. **Distinguish Metrics:**
-   - *Disk Footprint:* APFS file size on disk.
-   - *Resident VRAM Allocation:* Physical Metal GPU buffer allocation.
-   - *Host Memory Pressure:* Mach virtual memory pressure level (Normal = 1, Warning = 2, Critical = 4).
+- **Target Hardware Baseline (from Oct 28 benchmark docs/scripts):** Apple Silicon MacBook Air M5, 16 GB Unified Memory, macOS Darwin, local Ollama (`http://127.0.0.1:11434`) running `qwen3.5:9b` (`Q4_K_M`).
+- **Percentile Method (`src/carbon/core/metrics.py`):** NIST Linear Interpolation (`nist_percentile` / `summarize_distribution`) using $R = 1 + \frac{P}{100}(N - 1)$, reporting `count`, `min`, `p50`, `p90`, `p95`, and `max`.
+- **Single-Clock Integrity (`measure_ws_submission` & `TaskLatencySample`):** Client timings use the client's `time.perf_counter()` and backend timings use backend `time.perf_counter()`; Carbon explicitly prevents cross-clock subtraction (`"cross_clock_subtraction": false`).
 
 ---
 
-## 4. Benchmark Harness Design & Execution Protocol
+## 3. Existing vs. Placeholder Harness Locations
 
-Benchmarks are organized into reproducible scripts under `benchmarks/`:
-1. `benchmarks/inference/statistical_benchmark.py`: Measures cold load, warm TTFT, generation speed, total turnaround latency, and computes statistical distributions.
-2. `benchmarks/orchestration/`: Measures microsecond overhead of Core task scheduling and governance checks.
-3. `benchmarks/memory/`: Measures SQLite read/write latency under scale and FTS5 search times.
-4. `benchmarks/voice/`: Measures audio chunk processing and speech pipeline latency.
+Verified against the repository tree:
 
-Execution command:
-```bash
-.venv/bin/python benchmarks/inference/statistical_benchmark.py
-```
-
+| Path | Contents in Repository | Status |
+| :--- | :--- | :--- |
+| `tests/performance/test_stage5e_tier1_gates.py` | Stage 5-E E3 teardown/cancellation gate (`N=30`) & E4 220-op concurrency/chaos gate | **IMPLEMENTED** (Tier 1) |
+| `tests/performance/test_orchestration_benchmarks.py` | Stage 5-A warm (`N=50`), switched (`N=20`), and WS E2E (`N=30`) dispatch benchmarks (`FakeProvider`) | **IMPLEMENTED** (Tier 1) |
+| `tests/performance/test_memory_benchmarks.py` | Stage 5-A SQLite 1k-row memory & task query benchmarks (`N=50`) | **IMPLEMENTED** (Tier 1) |
+| `apps/macos/Carbon/Tests/test_stage5e_streaming_fidelity.swift`, `test_markdown.swift` | SwiftUI update rate & Markdown coordinator parsing benchmarks | **IMPLEMENTED** (Tier 1) |
+| `benchmarks/inference/` | `statistical_benchmark.py`, `benchmark_100_runs.py`, `benchmark_e2e_pipeline.py`, `results_100_runs.json`, `results_e2e_clean.json` | **PARTIALLY IMPLEMENTED** *(Historical Oct 28 scripts/datasets + Stage 5-A monotonic E2E harness; `CarbonCore` streams Ollama `POST /api/generate`)* |
+| `benchmarks/memory/` | `hardware_memory_verification.py`, `hardware_verification_results.json` | **IMPLEMENTED** *(Historical Oct 28 memory script/artifact)* |
+| `benchmarks/orchestration/` | Empty directory (`0` files; orchestration benchmarks live in `tests/performance/`) | **PLANNED** *(Directory unused)* |
+| `benchmarks/voice/` | Empty directory (`0` files) | **DEFERRED** *(Voice Stage 6.6 deferred)* |

@@ -67,15 +67,15 @@ Through continuous instrumentation of both the live Carbon WebSocket pipeline (`
    - At the physical hardware generation rate of ~21.4 tokens/second, every 100 thinking tokens demands **4.67 seconds of pure GPU compute**.
 
 2. **Complete UI Suppression of Thinking Tokens (UI TTFT Blindness):**
-   - In [`CarbonClient.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/CarbonClient.swift#L313-L317) and [`ContentView.swift`](file:///Users/pratikpradeshi/Carbon/apps/macos/Carbon/Sources/ContentView.swift#L229-L245), Carbon strictly suppresses thinking tokens to prevent exposing raw chain-of-thought to the end user.
+   - In [`CarbonClient.swift`](../../apps/macos/Carbon/Sources/CarbonClient.swift#L313-L317) and [`ContentView.swift`](../../apps/macos/Carbon/Sources/ContentView.swift#L229-L245), Carbon strictly suppresses thinking tokens to prevent exposing raw chain-of-thought to the end user.
    - When `event: "thinking"` arrives, `message.isProcessing` remains `true` and the UI renders a small `ProgressView` with `"Processing..."`.
    - Because Ollama does not emit any `response` tokens until the `<think>` tag closes, the user experiences **10 to 75 seconds of complete UI silence** before the first character renders.
 
 ### 2.2 Secondary Contributing Factors
 
 1. **Absence of Output Prediction Capping (`num_predict`):**
-   - The 6.39-second benchmark cited in project specifications was achieved in [`benchmark_100_runs.py:159`](file:///Users/pratikpradeshi/Carbon/benchmarks/inference/benchmark_100_runs.py#L159) by explicitly passing `"options": {"num_predict": 120}`.
-   - In normal chat, [`OllamaProvider.generate_stream_events`](file:///Users/pratikpradeshi/Carbon/src/carbon/model_control/ollama_provider.py#L117-L124) omits `num_predict`, leaving output uncapped.
+   - The 6.39-second benchmark cited in project specifications was achieved in [`benchmark_100_runs.py:159`](../../benchmarks/inference/benchmark_100_runs.py#L159) by explicitly passing `"options": {"num_predict": 120}`.
+   - In normal chat, [`OllamaProvider.generate_stream_events`](../../src/carbon/model_control/ollama_provider.py#L117-L124) omits `num_predict`, leaving output uncapped.
 2. **Single-Slot Concurrency in Ollama Daemon (`-np 1`):**
    - Process audit confirms Ollama's `llama-server` is spawned with `-np 1` (single execution slot). Any background test, health probe, or concurrent request queues sequentially in Ollama's backlog.
 
@@ -216,7 +216,7 @@ graph LR
 > **Strict Non-Implementation Compliance:** In accordance with audit directives, the following proposal is documented for subsequent implementation authorization. No production files have been altered.
 
 ### Stage 1: Add Runtime Parameter Pass-Through in `OllamaProvider`
-- **File:** [`src/carbon/model_control/ollama_provider.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/model_control/ollama_provider.py)
+- **File:** [`src/carbon/model_control/ollama_provider.py`](../../src/carbon/model_control/ollama_provider.py)
 - **Target Method:** `generate_stream_events(model_id, prompt, system, think=None, options=None)`
 - **Change:**
   ```python
@@ -234,7 +234,7 @@ graph LR
   ```
 
 ### Stage 2: Configure Task-Specific Parameters in Orchestrator
-- **File:** [`src/carbon/core/orchestrator.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/core/orchestrator.py)
+- **File:** [`src/carbon/core/orchestrator.py`](../../src/carbon/core/orchestrator.py)
 - **Target Method:** `execute_task_stream(task)`
 - **Change:**
   ```python
@@ -259,7 +259,7 @@ graph LR
   ```
 
 ### Stage 3: Synchronize Context-Length Reporting in CMS
-- **File:** [`src/carbon/model_control/ollama_provider.py`](file:///Users/pratikpradeshi/Carbon/src/carbon/model_control/ollama_provider.py)
+- **File:** [`src/carbon/model_control/ollama_provider.py`](../../src/carbon/model_control/ollama_provider.py)
 - **Target Method:** `list_available_models`
 - **Change:** Replace hardcoded `262144` fallback with active operational context window (`4096`), ensuring telemetry accurately reflects runtime allocation.
 
@@ -267,8 +267,8 @@ graph LR
 
 ## 9. Verification & Audit Evidence Index
 
-- Raw Benchmark Telemetry: [`scratch/benchmark_results.json`](file:///Users/pratikpradeshi/.gemini/antigravity/brain/f0cc0d37-8694-461a-acd0-6770725ec4f9/scratch/benchmark_results.json)
-- Remaining Benchmark Telemetry: [`scratch/remaining_benchmark_results.json`](file:///Users/pratikpradeshi/.gemini/antigravity/brain/f0cc0d37-8694-461a-acd0-6770725ec4f9/scratch/remaining_benchmark_results.json)
-- Baseline End-to-End Latency Report: [`docs/benchmarks/end-to-end-latency-report.md`](file:///Users/pratikpradeshi/Carbon/docs/benchmarks/end-to-end-latency-report.md)
-- Inference Benchmark Report: [`docs/benchmarks/inference-benchmark-report.md`](file:///Users/pratikpradeshi/Carbon/docs/benchmarks/inference-benchmark-report.md)
+- Raw Benchmark Telemetry: [`scratch/benchmark_results.json`](<agent-scratch>)
+- Remaining Benchmark Telemetry: [`scratch/remaining_benchmark_results.json`](<agent-scratch>)
+- Baseline End-to-End Latency Report: [`docs/benchmarks/end-to-end-latency-report.md`](../benchmarks/end-to-end-latency-report.md)
+- Inference Benchmark Report: [`docs/benchmarks/inference-benchmark-report.md`](../benchmarks/inference-benchmark-report.md)
 

@@ -1,7 +1,7 @@
 # Carbon 1.0.0 — Memory-Pressure Verification Report
 
 **Document Type:** Architecture & Hardware Verification Audit  
-**Version:** 1.1.0 (Corrected with Memory Measurement Distinctions)  
+**Version:** 1.1.0 (Oct 28 Historical Baseline; see [system-design.md](system-design.md) & [verification-summary.md](../reports/verification-summary.md) for later Stage 5-D native Mach hook & Stage 6.4 runtime verification)
 **Status:** Complete — Empirical Verification  
 **Target Hardware:** Apple Silicon MacBook Air (M5, macOS Darwin, 16 GB Unified Memory)  
 **Evaluated Components:** Carbon Model Supervisor (CMS), Ollama Daemon (`qwen3.5:9b`), Mach Kernel Memory Pressure  
